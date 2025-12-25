@@ -1,0 +1,24 @@
+<svg viewBox="0 0 150 60" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4081f2;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3568e0;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Main circle/badge shape -->
+  <circle cx="20" cy="30" r="18" fill="url(#logoGradient)" opacity="0.15"/>
+  <circle cx="20" cy="30" r="15" fill="none" stroke="url(#logoGradient)" stroke-width="2"/>
+  
+  <!-- R Letter - Stylized -->
+  <text x="20" y="38" font-size="26" font-weight="700" font-family="'Inter', sans-serif" 
+        fill="url(#logoGradient)" text-anchor="middle">R</text>
+  
+  <!-- RESTU Text -->
+  <text x="50" y="28" font-size="18" font-weight="700" font-family="'Inter', sans-serif" 
+        fill="#4081f2" letter-spacing="1">RESTU</text>
+  
+  <!-- Production Text (smaller) -->
+  <text x="50" y="45" font-size="10" font-weight="500" font-family="'Inter', sans-serif" 
+        fill="#f23d4c" letter-spacing="0.5">PRODUCTION</text>
+</svg>

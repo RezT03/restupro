@@ -1,0 +1,8 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <rect width="200" height="200" fill="#F0F4FF"/>
+  <circle cx="100" cy="60" r="20" fill="#4081f2" stroke="#3568e0" stroke-width="2"/>
+  <path d="M 100 85 L 80 140 Q 80 150 90 150 L 110 150 Q 120 150 120 140 L 100 85 Z" fill="#4081f2" stroke="#3568e0" stroke-width="2"/>
+  <ellipse cx="85" cy="155" rx="8" ry="12" fill="#3568e0"/>
+  <ellipse cx="115" cy="155" rx="8" ry="12" fill="#3568e0"/>
+  <text x="100" y="185" font-size="14" font-weight="bold" fill="#666" text-anchor="middle">Audio System</text>
+</svg>

@@ -1,0 +1,8 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <rect width="200" height="200" fill="#FFE6F0"/>
+  <polygon points="100,50 130,100 120,140 80,140 70,100" fill="#E84393" stroke="#C91379" stroke-width="2"/>
+  <rect x="85" y="120" width="30" height="20" fill="#C91379" stroke="#A00E63" stroke-width="2"/>
+  <circle cx="92" cy="130" r="3" fill="#FFE6F0"/>
+  <circle cx="108" cy="130" r="3" fill="#FFE6F0"/>
+  <text x="100" y="185" font-size="14" font-weight="bold" fill="#666" text-anchor="middle">Stage</text>
+</svg>

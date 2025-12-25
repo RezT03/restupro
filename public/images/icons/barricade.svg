@@ -1,0 +1,6 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <rect width="200" height="200" fill="#E6F0FF"/>
+  <path d="M 75 60 Q 65 70 65 85 Q 65 100 75 110 L 75 140 Q 75 150 85 150 L 115 150 Q 125 150 125 140 L 125 110 Q 135 100 135 85 Q 135 70 125 60 Q 115 50 100 50 Q 85 50 75 60 Z" fill="#5B9EFF" stroke="#4081f2" stroke-width="2"/>
+  <circle cx="100" cy="90" r="12" fill="#4081f2"/>
+  <text x="100" y="185" font-size="14" font-weight="bold" fill="#666" text-anchor="middle">Barricade</text>
+</svg>

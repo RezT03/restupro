@@ -1,0 +1,9 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <rect width="200" height="200" fill="#FFF9E6"/>
+  <circle cx="100" cy="70" r="18" fill="#FFB800" stroke="#FF9500" stroke-width="2"/>
+  <path d="M 100 92 L 95 140 L 105 140 L 100 92 Z" fill="#FFB800" stroke="#FF9500" stroke-width="2"/>
+  <path d="M 75 115 L 125 115 L 120 135 L 80 135 Z" fill="#FFB800" stroke="#FF9500" stroke-width="2"/>
+  <circle cx="85" cy="100" r="8" fill="#FF9500" opacity="0.6"/>
+  <circle cx="115" cy="100" r="8" fill="#FF9500" opacity="0.6"/>
+  <text x="100" y="185" font-size="14" font-weight="bold" fill="#666" text-anchor="middle">Lighting</text>
+</svg>
