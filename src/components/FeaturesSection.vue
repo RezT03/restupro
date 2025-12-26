@@ -11,7 +11,7 @@ const features = [
     id: 2,
     title: 'Harga Kompetitif',
     description: 'Dapatkan harga terbaik tanpa mengorbankan kualitas perlengkapan event Anda',
-    icon: 'attach_money',
+    icon: 'payments',
   },
   {
     id: 3,

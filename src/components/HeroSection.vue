@@ -19,9 +19,9 @@
           <a href="#equipment" class="btn btn-secondary">Lihat Perlengkapan</a>
         </div>
       </div>
-      <div class="hero-image">
+      <!-- <div class="hero-image">
         <div class="hero-shape"></div>
-      </div>
+      </div> -->
     </div>
   </section>
 </template>
@@ -149,16 +149,6 @@
   justify-content: center;
 }
 
-/* .hero-shape {
-  position: absolute;
-  width: 300px;
-  height: 300px;
-  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-  border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
-  animation: blob 8s infinite;
-  opacity: 0.8;
-} */
-
 .hero-icons {
   position: relative;
   z-index: 2;
@@ -232,23 +222,42 @@
   .hero-container {
     grid-template-columns: 1fr;
     padding: 0 1.5rem;
+    /* max-height: min-content; */
   }
 
   .hero {
     padding: 4rem 0;
+    /* max-height: 5px; */
+    background:linear-gradient(
+      rgba(255,255,255,0.75) 65%,
+      rgba(255,255,255,0.75) 65%
+    ), url('/images/hero.png');
+    background-repeat: no-repeat;
+    background-size: cover;
+  }
+  .hero-description{
+    color: #464646;
+  }
+  :root.dark-mode .hero{
+    background: linear-gradient(
+      rgba(0,0,0,0.75) 60%,
+      rgba(0,0,0,0.75) 60%
+      ), url('/images/hero.png');
   }
 
+  :root.dark-mode .hero-description{
+    color:#dfdfdf
+  }
+  .hero > *{
+    position: relative;
+    z-index: 1;
+  }
   .hero-title {
     font-size: 2.2rem;
   }
 
   .hero-image {
     height: 300px;
-  }
-
-  .hero-shape {
-    width: 250px;
-    height: 250px;
   }
 
   .hero-cta {

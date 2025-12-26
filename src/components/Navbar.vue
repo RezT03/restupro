@@ -231,7 +231,7 @@ const scrollToSection = (id) => {
     background-color: #ffffff;
     flex-direction: column;
     gap: 1rem;
-    padding: 2rem 1.5rem;
+    padding: 0 1.5rem;
     border-bottom: 1px solid var(--border-light);
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     max-height: 0;
@@ -245,6 +245,7 @@ const scrollToSection = (id) => {
 
   .nav-menu.active {
     max-height: 400px;
+    padding: 2rem 1.5rem;
   }
 
   .nav-item {

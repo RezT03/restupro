@@ -21,9 +21,9 @@
           <div class="contact-method">
             <span class="method-icon material-icons">chat</span>
             <div>
-              <a href="http://wa.me/6282145632380">
+              <a href="http://wa.me/6282145632380?text=Hai Restu Production. Saya sedang membutuhkan perlengkapan event, bisakah saya mendapatkan detail harga dan cara penyewaan?" target="_blank">
                 <h4>WhatsApp</h4>
-                <p>+62 <i>klik saja, nanti kami balas</i></p>
+                <p>+62 <i>klik ini lalu chat saja, nanti kami balas</i></p>
               </a>
             </div>
           </div>

@@ -94,6 +94,7 @@ const equipments = [
 .section-header {
   text-align: center;
   margin-bottom: 4rem;
+  z-index: 1000;
 }
 
 .section-header h2 {

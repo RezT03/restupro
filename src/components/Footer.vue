@@ -24,8 +24,7 @@ const currentYear = new Date().getFullYear()
         <div class="footer-section">
           <h4>Layanan</h4>
           <ul>
-            <li><a href="#invoice">Buat Invoice</a></li>
-            <li><a href="#invoice">Cek Invoice</a></li>
+            <li><a href="https://invoice.restuproduction.com" target="_blank">Cek Invoice</a></li>
             <li><a href="#features">Tentang Kami</a></li>
           </ul>
         </div>
@@ -33,10 +32,9 @@ const currentYear = new Date().getFullYear()
         <div class="footer-section">
           <h4>Hubungi Kami</h4>
           <p>Email: info@restuproduction.com</p>
-          <p>Telepon: +62 XXX XXXX XXXX</p>
           <div class="social-links">
             <a href="#" title="Instagram">Instagram</a>
-            <a href="#" title="WhatsApp">WhatsApp</a>
+            <a href="https://wa.me/6282145632380?text=Hai Restu Production. Saya sedang membutuhkan perlengkapan event, bisakah saya mendapatkan detail harga dan cara penyewaan?" title="WhatsApp" target="_blank">WhatsApp</a>
           </div>
         </div>
       </div>
