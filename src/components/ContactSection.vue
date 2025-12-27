@@ -38,11 +38,6 @@
               </div>
           </div>
         </div>
-
-        <!-- <div class="contact-cta">
-          <RouterLink to="/invoice" class="btn btn-primary">Buat Invoice Sekarang</RouterLink>
-          <a href="#features" class="btn btn-secondary">Pelajari Lebih Lanjut</a>
-        </div> -->
       </div>
     </div>
   </section>
