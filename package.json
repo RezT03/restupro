@@ -1,6 +1,6 @@
 {
   "name": "restupro",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -8,7 +8,11 @@
   },
   "scripts": {
     "dev": "vite",
+    "dev:api": "npm --prefix server run dev",
+    "dev:full": "node scripts/dev.js",
+    "setup:server": "npm --prefix server install",
     "build": "vite build",
+    "start": "npm --prefix server start",
     "preview": "vite preview",
     "test:unit": "vitest",
     "test:e2e": "playwright test",
@@ -22,11 +26,9 @@
   "devDependencies": {
     "@eslint/js": "^9.39.1",
     "@playwright/test": "^1.57.0",
-    "@rollup/rollup-linux-x64-gnu": "^4.54.0",
     "@vitejs/plugin-vue": "^6.0.2",
     "@vitest/eslint-plugin": "^1.5.0",
     "@vue/eslint-config-prettier": "^10.2.0",
-    "@vue/test-utils": "^2.4.6",
     "eslint": "^9.39.1",
     "eslint-plugin-playwright": "^2.3.0",
     "eslint-plugin-vue": "~10.5.1",

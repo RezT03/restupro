@@ -1,271 +1,325 @@
 <script setup>
-// import { RouterLink } from 'vue-router'
+import { computed } from 'vue'
+import { RouterLink } from 'vue-router'
+import { whatsappLink } from '../utils/settings'
+
+const wa = computed(() =>
+  whatsappLink(undefined, 'Hai Restu Production, saya ingin konsultasi perlengkapan untuk acara saya.'),
+)
+
+const marquee = ['Audio System', 'Lighting', 'Panggung & Truss', 'LED Screen', 'Genset', 'Barikade']
+
+const facts = [
+  { value: '6', label: 'kategori perlengkapan' },
+  { value: '1', label: 'tempat, semua kebutuhan' },
+  { value: '✓', label: 'tim setup di lokasi' },
+]
 </script>
 
 <template>
   <section class="hero">
-    <div class="hero-container">
-      <div class="hero-content">
-        <h1 class="hero-title">
-          Perlengkapan Event Profesional
-          <span class="accent">Untuk Acara Sempurna Anda</span>
+    <div class="wrap hero__grid">
+      <div class="hero__copy" v-reveal>
+        <p class="eyebrow">Sewa perlengkapan event · Wonosobo</p>
+        <h1 class="display hero__title">
+          Fokus ke acara Anda.<br /><em>Urusan alat, serahkan pada kami.</em>
         </h1>
-        <p class="hero-description">
-          Restu Production menyediakan perlengkapan event berkualitas tinggi dengan layanan terbaik.
-          Audio, lighting, stage, dan semua kebutuhan event Anda dalam satu tempat.
+        <p class="lead hero__lead">
+          Dari tata suara sampai panggung, Restu Production menyiapkan perlengkapan event yang
+          sesuai kebutuhan — lengkap, terawat, dan siap pakai saat Anda membutuhkannya.
         </p>
-        <div class="hero-cta">
-          <a href="#contact" class="btn btn-primary">Hubungi Kami</a>
-          <a href="#equipment" class="btn btn-secondary">Lihat Perlengkapan</a>
+        <div class="hero__actions">
+          <a :href="wa" target="_blank" rel="noopener noreferrer" class="btn btn--primary">
+            Konsultasi gratis <span class="btn__arrow" aria-hidden="true">↗</span>
+          </a>
+          <RouterLink to="/project" class="btn btn--ghost">Lihat hasil kerja kami</RouterLink>
         </div>
+        <dl class="hero__facts">
+          <div v-for="fact in facts" :key="fact.label">
+            <dt>{{ fact.value }}</dt>
+            <dd>{{ fact.label }}</dd>
+          </div>
+        </dl>
       </div>
-      <!-- <div class="hero-image">
-        <div class="hero-shape"></div>
-      </div> -->
+
+      <div class="hero__visual" v-reveal>
+        <div class="hero__frame">
+          <img
+            src="/images/hero.png"
+            alt="Tata suara dan perlengkapan panggung yang disiapkan Restu Production"
+            width="752"
+            height="502"
+            fetchpriority="high"
+            decoding="async"
+          />
+        </div>
+        <div class="hero__tag">
+          <span class="hero__dot" aria-hidden="true"></span>
+          <div>
+            <strong>Siap pakai</strong>
+            <small>Setiap alat dicek sebelum acara</small>
+          </div>
+        </div>
+        <p class="hero__caption">Dokumentasi perlengkapan Restu Production</p>
+      </div>
+    </div>
+
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee__track">
+        <span v-for="(item, i) in [...marquee, ...marquee]" :key="`${item}-${i}`">
+          {{ item }} <b>◆</b>
+        </span>
+      </div>
     </div>
   </section>
 </template>
 
 <style scoped>
 .hero {
-  padding: 6rem 0;
-  background: linear-gradient(
-    to right,
-    rgba(255,255,255,1) 0%,
-    rgba(255, 255, 255,1) 35%,
-    rgba(255,255,255,0.95) 50%,
-    rgba(255,255,255,0.5) 60%,
-    rgba(255,255,255,0.3) 75%,
-    rgba(119, 119, 119, 0) 85%,
-    transparent
-  ),
-  url('/images/hero.png');
+  position: relative;
   overflow: hidden;
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-position: right;
+  padding-top: clamp(3rem, 6vw, 5.5rem);
 }
 
-/*  */
-
-:root.dark-mode .hero {
-  background: linear-gradient(
-    to right,
-    rgb(0, 0, 0) 0%,
-    rgb(0, 0, 0) 35%,
-    rgba(0, 0, 0, 0.95) 50%,
-    rgba(73, 73, 73, 0.6) 60%,
-    rgba(145, 145, 145, 0.4) 75%,
-    rgba(221, 221, 221, 0) 85%,
-    transparent
-  ),
-  url('/images/hero.png');
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-position: right;
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -180px;
+  right: -120px;
+  width: 520px;
+  height: 520px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  pointer-events: none;
 }
 
-.hero-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 2rem;
+.hero__grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 3rem;
+  grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
+  gap: clamp(2rem, 6vw, 6rem);
   align-items: center;
+  padding-bottom: clamp(3rem, 6vw, 5rem);
 }
 
-.hero-content {
-  z-index: 2;
+.hero__title {
+  margin-block: 1.4rem 1.5rem;
+  max-width: 15ch;
 }
 
-.hero-title {
-  font-size: 3.5rem;
-  line-height: 1.2;
-  margin-bottom: 1rem;
-  color: var(--text-dark);
-  font-weight: 700;
+.hero__title em {
+  font-style: normal;
+  color: var(--brand);
 }
 
-.accent {
-  display: block;
-  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin-top: 0.5rem;
+.hero__lead {
+  max-width: 48ch;
 }
 
-.hero-description {
-  font-size: 1.1rem;
-  color: var(--text-light);
-  margin-bottom: 2rem;
-  line-height: 1.8;
-}
-
-.hero-cta {
+.hero__actions {
   display: flex;
-  gap: 1rem;
   flex-wrap: wrap;
+  gap: 0.8rem;
+  margin-top: 2.2rem;
 }
 
-.btn {
-  padding: 0.9rem 2rem;
-  border-radius: 8px;
+.hero__facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2.5rem;
+  margin-top: 3.5rem;
+  padding-top: 1.6rem;
+  border-top: 1px solid var(--line);
+}
+
+.hero__facts dt {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
   font-weight: 600;
-  font-size: 1rem;
-  transition: all 0.3s ease;
-  display: inline-block;
-  text-align: center;
-  border: 2px solid transparent;
+  line-height: 1;
+  color: var(--ink);
 }
 
-.btn-primary {
-  background: linear-gradient(135deg, var(--primary-color), #3568e0);
-  color: #ffffff;
+.hero__facts dd {
+  font-size: 0.75rem;
+  color: var(--ink-faint);
+  margin-top: 0.4rem;
+  max-width: 16ch;
 }
 
-.btn-primary:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 16px rgba(64, 129, 242, 0.3);
-}
-
-.btn-secondary {
-  color: var(--primary-color);
-  border-color: var(--primary-color);
-  background-color: transparent;
-}
-
-.btn-secondary:hover {
-  background-color: var(--primary-color);
-  color: #ffffff;
-}
-
-.hero-image {
+.hero__visual {
   position: relative;
-  height: 400px;
+  padding: 0 1.5rem 1.5rem 0;
+}
+
+.hero__frame {
+  position: relative;
+  background: var(--surface);
+  padding: 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: 18px 18px 0 -1px var(--brand-soft);
+}
+
+.hero__frame img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+  border-radius: 5px;
+  filter: saturate(0.92) contrast(1.03);
+}
+
+.hero__tag {
+  position: absolute;
+  left: -1rem;
+  bottom: 3.2rem;
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 0.75rem;
+  padding: 0.8rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.07);
+  animation: bob 5s ease-in-out infinite;
 }
 
-.hero-icons {
-  position: relative;
-  z-index: 2;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
+.hero__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 15%, transparent);
 }
 
-.icon-box {
-  width: 60px;
-  height: 60px;
-  background-color: #ffffff;
-  border-radius: 12px;
+.hero__tag strong {
+  display: block;
+  font-size: 0.82rem;
+  line-height: 1.2;
+}
+
+.hero__tag small {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--ink-faint);
+  margin-top: 0.2rem;
+}
+
+.hero__caption {
+  text-align: right;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-top: 1.2rem;
+}
+
+@keyframes bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+.marquee {
+  border-block: 1px solid var(--line);
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.marquee__track {
   display: flex;
+  width: max-content;
+  gap: 2.5rem;
+  padding-block: 0.9rem;
+  animation: slide 32s linear infinite;
+}
+
+.marquee__track span {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  font-size: 2rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  animation: float 3s ease-in-out infinite;
-  transition: all 0.3s ease;
+  gap: 2.5rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  white-space: nowrap;
 }
 
-:root.dark-mode .icon-box {
-  background-color: #2a2a3a;
-  box-shadow: 0 4px 12px rgba(64, 129, 242, 0.2);
+.marquee__track b {
+  color: var(--accent);
+  font-size: 0.55rem;
 }
 
-.icon-box:nth-child(1) {
-  animation-delay: 0s;
-}
-
-.icon-box:nth-child(2) {
-  animation-delay: 0.3s;
-}
-
-.icon-box:nth-child(3) {
-  animation-delay: 0.6s;
-}
-
-.icon-box:nth-child(4) {
-  animation-delay: 0.9s;
-}
-
-@keyframes blob {
-  0%,
-  100% {
-    transform: translate(0, 0) scale(1);
-  }
-  25% {
-    transform: translate(20px, -20px) scale(1.05);
-  }
-  50% {
-    transform: translate(0, -30px) scale(1.1);
-  }
-  75% {
-    transform: translate(-20px, -20px) scale(1.05);
+@keyframes slide {
+  to {
+    transform: translateX(-50%);
   }
 }
 
-@keyframes float {
-  0%,
-  100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-15px);
-  }
-}
-
-@media (max-width: 768px) {
-  .hero-container {
-    grid-template-columns: 1fr;
-    padding: 0 1.5rem;
-    /* max-height: min-content; */
-  }
-
+/* Desktop: judul sampai CTA harus selesai di dalam viewport pertama (termasuk 1366x768). */
+@media (min-width: 901px) {
   .hero {
-    padding: 4rem 0;
-    /* max-height: 5px; */
-    background:linear-gradient(
-      rgba(255,255,255,0.75) 65%,
-      rgba(255,255,255,0.75) 65%
-    ), url('/images/hero.png');
-    background-repeat: no-repeat;
-    background-size: cover;
-  }
-  .hero-description{
-    color: #464646;
-  }
-  :root.dark-mode .hero{
-    background: linear-gradient(
-      rgba(0,0,0,0.75) 60%,
-      rgba(0,0,0,0.75) 60%
-      ), url('/images/hero.png');
+    padding-top: clamp(2rem, 3vw, 3.25rem);
   }
 
-  :root.dark-mode .hero-description{
-    color:#dfdfdf
-  }
-  .hero > *{
-    position: relative;
-    z-index: 1;
-  }
-  .hero-title {
-    font-size: 2.2rem;
+  .hero__grid {
+    padding-bottom: clamp(2.5rem, 4vw, 4rem);
   }
 
-  .hero-image {
-    height: 300px;
+  .hero__title {
+    max-width: 18ch;
+    font-size: clamp(2.8rem, 4.5vw, 4.3rem);
+    line-height: 1.08;
+    margin-block: 1rem 1.1rem;
   }
 
-  .hero-cta {
-    flex-direction: column;
+  .hero__lead {
+    font-size: 1.02rem;
+    line-height: 1.55;
   }
 
-  .btn {
+  .hero__actions {
+    margin-top: 1.5rem;
+  }
+
+  .hero__facts {
+    margin-top: 2.5rem;
+    padding-top: 1.2rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .hero__grid {
+    grid-template-columns: 1fr;
+    gap: 3rem;
+  }
+
+  .hero__title {
+    max-width: none;
+  }
+
+  .hero__visual {
+    max-width: 620px;
+  }
+}
+
+@media (max-width: 520px) {
+  .hero__actions .btn {
     width: 100%;
+  }
+
+  .hero__facts {
+    gap: 1.5rem;
+  }
+
+  .hero__tag {
+    left: 0;
+    bottom: 2.4rem;
   }
 }
 </style>

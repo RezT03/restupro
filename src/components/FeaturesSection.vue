@@ -1,198 +1,122 @@
 <script setup>
-const features = [
+import { RouterLink } from 'vue-router'
+
+const steps = [
   {
-    id: 1,
-    title: 'Kualitas Profesional',
-    description:
-      'Semua perlengkapan kami adalah produk profesional yang telah terbukti kualitasnya',
-    icon: 'star',
+    title: 'Ceritakan kebutuhan Anda',
+    text: 'Kami tanya jenis acara, lokasi, dan perkiraan jumlah tamu. Dari situ kami sarankan paket yang paling pas, bukan yang paling mahal.',
   },
   {
-    id: 2,
-    title: 'Harga Kompetitif',
-    description: 'Dapatkan harga terbaik tanpa mengorbankan kualitas perlengkapan event Anda',
-    icon: 'payments',
+    title: 'Kami siapkan dan uji alat',
+    text: 'Perlengkapan dicek, dibersihkan, dan diuji sebelum berangkat. Anda bisa datang melihat langsung bila mau.',
   },
   {
-    id: 3,
-    title: 'Tepat Waktu',
-    description:
-      'Kami siap mengantarkan perlengkapan ke lokasi event Anda dengan aman dan tepat waktu',
-    icon: 'local_shipping',
+    title: 'Datang, pasang, dan dampingi',
+    text: 'Tim kami tiba di lokasi lebih awal untuk setup. Saat acara berlangsung, kami tetap siap jika ada yang perlu disesuaikan.',
   },
   {
-    id: 4,
-    title: 'Tim Profesional',
-    description: 'Tim ahli kami siap membantu setup dan troubleshooting selama event Anda',
-    icon: 'verified',
-  },
-  {
-    id: 5,
-    title: 'Support 24/7',
-    description: 'Dukungan pelanggan siap melayani Anda kapan saja diperlukan',
-    icon: 'headset_mic',
-  },
-  {
-    id: 6,
-    title: 'Garansi Kepuasan',
-    description: 'Kami menjamin kepuasan Anda dengan layanan purna jual terbaik',
-    icon: 'verified_user',
+    title: 'Beres acara, beres alat',
+    text: 'Setelah acara selesai, kami bongkar dan membawa perlengkapan kembali. Anda tidak perlu repot mengembalikan.',
   },
 ]
 </script>
 
 <template>
-  <section id="features" class="features-section">
-    <div class="features-container">
-      <div class="section-header">
-        <h2>Mengapa Memilih Kami?</h2>
-        <p>Komitmen kami adalah kesuksesan event Anda</p>
+  <section id="approach" class="section approach">
+    <div class="wrap approach__grid">
+      <div class="approach__panel" v-reveal>
+        <p class="eyebrow">02 / Cara kerja</p>
+        <h2 class="h2">Tidak cuma menyewakan alat. Kami ikut memastikan acara berjalan.</h2>
+        <p class="lead">
+          Prosesnya sederhana dan transparan. Anda tahu apa yang Anda dapat, kapan alat tiba, dan
+          siapa yang bisa dihubungi.
+        </p>
+        <RouterLink to="/about" class="text-link">Lebih tentang kami <span aria-hidden="true">→</span></RouterLink>
       </div>
 
-      <div class="features-grid">
-        <div v-for="feature in features" :key="feature.id" class="feature-card">
-          <div class="feature-icon">
-            <span class="material-icons">{{ feature.icon }}</span>
+      <ol class="approach__list">
+        <li v-for="(step, i) in steps" :key="step.title" v-reveal :style="{ '--delay': `${i * 80}ms` }">
+          <span class="approach__num">{{ String(i + 1).padStart(2, '0') }}</span>
+          <div>
+            <h3>{{ step.title }}</h3>
+            <p>{{ step.text }}</p>
           </div>
-          <h3>{{ feature.title }}</h3>
-          <p>{{ feature.description }}</p>
-        </div>
-      </div>
+        </li>
+      </ol>
     </div>
   </section>
 </template>
 
 <style scoped>
-.features-section {
-  padding: 6rem 0;
-  background: linear-gradient(135deg, var(--light-bg), #ffffff);
-  transition: background 0.3s ease;
-}
-
-:root.dark-mode .features-section {
-  background: linear-gradient(135deg, #1a1a1a, #0f0f0f);
-}
-
-.features-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 2rem;
-}
-
-.section-header {
-  text-align: center;
-  margin-bottom: 4rem;
-}
-
-.section-header h2 {
-  font-size: 2.5rem;
-  color: var(--text-dark);
-  margin-bottom: 0.8rem;
-}
-
-.section-header p {
-  font-size: 1.1rem;
-  color: var(--text-light);
-}
-
-.features-grid {
+.approach__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: clamp(2rem, 7vw, 7rem);
 }
 
-.feature-card {
-  background-color: #ffffff;
-  padding: 2rem;
-  border-radius: 12px;
-  text-align: center;
-  border: 1px solid var(--border-light);
-  transition: all 0.3s ease;
+.approach__panel {
+  position: sticky;
+  top: 110px;
+  align-self: start;
+  min-width: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: clamp(1.5rem, 3vw, 2.5rem);
 }
 
-:root.dark-mode .feature-card {
-  background-color: #1a1a1a;
-  border-color: #333333;
+.approach__panel h2 {
+  margin-block: 1.2rem 1.5rem;
+  max-width: 18ch;
 }
 
-.feature-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
-  border-color: var(--primary-color);
+.approach__panel .text-link {
+  margin-top: 2rem;
 }
 
-:root.dark-mode .feature-card:hover {
-  box-shadow: 0 12px 24px rgba(64, 129, 242, 0.2);
+.approach__list li {
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  gap: 1rem;
+  padding-block: 1.8rem;
+  border-top: 1px solid var(--line);
 }
 
-.feature-icon {
-  margin-bottom: 1rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 70px;
-  height: 70px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #f0f4ff, #ffffff);
-  color: #4081f2;
-  transition: all 0.3s ease;
+.approach__list li:last-child {
+  border-bottom: 1px solid var(--line);
 }
 
-.feature-icon .material-icons {
-  font-size: 2.5rem;
-  line-height: 1;
+.approach__num {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--accent);
+  padding-top: 0.25rem;
 }
 
-:root.dark-mode .feature-icon {
-  background: linear-gradient(135deg, #2a3a5a, #1f2e45);
-  color: #7ab8ff;
+.approach__list h3 {
+  font-size: 1.25rem;
+  margin-bottom: 0.55rem;
 }
 
-.feature-card:hover .feature-icon {
-  background: linear-gradient(135deg, #4081f2, #3568e0);
-  color: #ffffff;
-  transform: scale(1.1);
+.approach__list p {
+  color: var(--ink-soft);
+  font-size: 0.92rem;
+  max-width: 54ch;
 }
 
-:root.dark-mode .feature-card:hover .feature-icon {
-  background: linear-gradient(135deg, #5a9fff, #4081f2);
-  color: #ffffff;
-}
-
-.feature-card h3 {
-  font-size: 1.3rem;
-  margin-bottom: 0.8rem;
-  color: var(--text-dark);
-}
-
-.feature-card p {
-  color: var(--text-light);
-  line-height: 1.6;
-  font-size: 0.95rem;
-}
-
-@media (max-width: 768px) {
-  .features-section {
-    padding: 4rem 0;
-  }
-
-  .features-container {
-    padding: 0 1.5rem;
-  }
-
-  .section-header h2 {
-    font-size: 1.8rem;
-  }
-
-  .features-grid {
+@media (max-width: 880px) {
+  .approach__grid {
     grid-template-columns: 1fr;
-    gap: 1.5rem;
+    gap: 2.5rem;
   }
 
-  .feature-icon {
-    font-size: 2.5rem;
-    width: 60px;
-    height: 60px;
+  .approach__panel {
+    position: static;
+  }
+
+  .approach__panel h2 {
+    max-width: none;
   }
 }
 </style>

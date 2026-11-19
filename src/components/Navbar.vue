@@ -1,270 +1,344 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <script setup>
-import { RouterLink } from 'vue-router'
-import { ref } from 'vue'
+import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { RouterLink, useRoute } from 'vue-router'
 
-const isMenuOpen = ref(false)
-const isDarkMode = ref(false)
+const route = useRoute()
+const menuOpen = ref(false)
+const dark = ref(false)
+const scrolled = ref(false)
+const activeSection = ref('')
 
-const toggleMenu = () => {
-  isMenuOpen.value = !isMenuOpen.value
+const SECTION_IDS = ['equipment', 'approach', 'project', 'contact']
+
+const links = [
+  { label: 'Beranda', to: '/' },
+  { label: 'Perlengkapan', to: { path: '/', hash: '#equipment' } },
+  { label: 'Proyek', to: { path: '/', hash: '#project' } },
+  { label: 'Tentang', to: { path: '/', hash: '#approach' } },
+  { label: 'Kontak', to: { path: '/', hash: '#contact' } },
+]
+
+/** Highlight dihitung dari posisi scroll, bukan dari hash di URL. */
+const isActive = (to) => {
+  if (route.path !== '/') return typeof to === 'string' && route.path === to
+  if (typeof to === 'string') return to === '/' && activeSection.value === 'home'
+  return activeSection.value === String(to.hash || '').replace('#', '')
 }
 
-const toggleDarkMode = () => {
-  isDarkMode.value = !isDarkMode.value
+function updateActiveSection() {
+  if (route.path !== '/') {
+    activeSection.value = ''
+    return
+  }
 
-  if (isDarkMode.value) {
-    document.documentElement.classList.add('dark-mode')
-    localStorage.setItem('darkMode', 'true')
+  const offset = 120 // tinggi nav sticky + sedikit ruang
+  let current = 'home'
+  let lastVisible = 'home'
+
+  for (const id of SECTION_IDS) {
+    const el = document.getElementById(id)
+    if (!el) continue
+    lastVisible = id
+    if (el.getBoundingClientRect().top <= offset) current = id
+  }
+
+  // Saat halaman digulir sampai bawah (termasuk area footer),
+  // section terakhir yang tetap disorot.
+  const atBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4
+  activeSection.value = atBottom ? lastVisible : current
+}
+
+/** Supaya highlight langsung berpindah saat menu diklik, sebelum scroll selesai. */
+function activateTarget(to) {
+  if (typeof to === 'string') {
+    activeSection.value = to === '/' ? 'home' : ''
   } else {
-    document.documentElement.classList.remove('dark-mode')
-    localStorage.setItem('darkMode', 'false')
+    activeSection.value = String(to.hash || '').replace('#', '') || 'home'
   }
 }
 
-const scrollToSection = (id) => {
-  const element = document.getElementById(id)
-  if (element) {
-    element.scrollIntoView({ behavior: 'smooth' })
-    isMenuOpen.value = false
+let frame
+
+onMounted(() => {
+  dark.value = document.documentElement.classList.contains('dark-mode')
+  window.addEventListener('scroll', onScroll, { passive: true })
+  nextTick(updateActiveSection)
+  updateActiveSection()
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', onScroll)
+  if (frame) cancelAnimationFrame(frame)
+})
+
+watch(
+  () => route.path,
+  () => nextTick(updateActiveSection),
+)
+
+function onScroll() {
+  scrolled.value = window.scrollY > 12
+  if (!frame) {
+    frame = requestAnimationFrame(() => {
+      frame = undefined
+      updateActiveSection()
+    })
   }
+}
+
+function toggleTheme() {
+  dark.value = !dark.value
+  document.documentElement.classList.toggle('dark-mode', dark.value)
+  localStorage.setItem('darkMode', String(dark.value))
 }
 </script>
 
 <template>
-  <nav class="navbar">
-    <div class="navbar-container">
-      <RouterLink to="/" class="navbar-logo">
-        <img src="/images/RESPRO LOGO-exc.svg" alt="Restu Production" class="logo-image" />
+  <header class="nav" :class="{ 'nav--scrolled': scrolled }">
+    <div class="wrap nav__inner">
+      <RouterLink to="/" class="nav__brand" aria-label="Restu Production, ke beranda" @click="menuOpen = false">
+        <img src="/images/RESPRO LOGO-exc.svg" alt="Restu Production" width="126" height="43" />
       </RouterLink>
 
-      <div class="menu-toggle" @click="toggleMenu">
-        <span :class="{ active: isMenuOpen }"></span>
-        <span :class="{ active: isMenuOpen }"></span>
-        <span :class="{ active: isMenuOpen }"></span>
-      </div>
+      <nav class="nav__links" :class="{ 'is-open': menuOpen }" aria-label="Navigasi utama">
+        <RouterLink
+          v-for="link in links"
+          :key="link.label"
+          :to="link.to"
+          class="nav__link"
+          :class="{ 'is-active': isActive(link.to) }"
+          @click="activateTarget(link.to); menuOpen = false"
+        >
+          {{ link.label }}
+        </RouterLink>
+        <RouterLink
+          class="nav__link nav__link--cta"
+          :to="{ path: '/', hash: '#contact' }"
+          @click="activateTarget({ path: '/', hash: '#contact' }); menuOpen = false"
+        >
+          Konsultasi <span aria-hidden="true">↗</span>
+        </RouterLink>
+      </nav>
 
-      <ul class="nav-menu" :class="{ active: isMenuOpen }">
-        <li class="nav-item">
-          <a href="#equipment" @click.prevent="scrollToSection('equipment')" class="nav-link"
-            >Perlengkapan</a
-          >
-        </li>
-        <li class="nav-item">
-          <a href="#features" @click.prevent="scrollToSection('features')" class="nav-link"
-            >Keunggulan</a
-          >
-        </li>
-        <li class="nav-item">
-          <a href="#contact" @click.prevent="scrollToSection('contact')" class="nav-link">Kontak</a>
-        </li>
-        <!-- <li class="nav-item">
-          <RouterLink to="/invoice" class="nav-link nav-cta">Invoice</RouterLink>
-        </li> -->
-        <li class="nav-item">
-          <button
-            @click="toggleDarkMode"
-            class="dark-mode-toggle"
-            :title="isDarkMode ? 'Light Mode' : 'Dark Mode'"
-          >
-            <span class="material-icons">
-              {{ isDarkMode ? 'light_mode' : 'dark_mode' }}
-            </span>
-          </button>
-        </li>
-      </ul>
+      <div class="nav__actions">
+        <button
+          class="icon-btn"
+          type="button"
+          :aria-label="dark ? 'Aktifkan mode terang' : 'Aktifkan mode gelap'"
+          :title="dark ? 'Mode terang' : 'Mode gelap'"
+          @click="toggleTheme"
+        >
+          <svg v-if="dark" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.7" />
+            <path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M19.1 4.9l-1.8 1.8M6.7 17.3l-1.8 1.8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+          </svg>
+          <svg v-else viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
+          </svg>
+        </button>
+        <button
+          class="icon-btn nav__burger"
+          type="button"
+          :aria-expanded="menuOpen"
+          aria-label="Buka menu"
+          @click="menuOpen = !menuOpen"
+        >
+          <span :class="{ 'is-open': menuOpen }"></span>
+          <span :class="{ 'is-open': menuOpen }"></span>
+        </button>
+      </div>
     </div>
-  </nav>
+  </header>
 </template>
 
 <style scoped>
-.navbar {
+.nav {
   position: sticky;
   top: 0;
   z-index: 100;
-  background-color: #ffffff;
-  border-bottom: 1px solid var(--border-light);
-  padding: 1rem 0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  transition:
-    background-color 0.3s ease,
-    border-color 0.3s ease;
+  border-bottom: 1px solid transparent;
+  transition: background-color 0.3s ease, border-color 0.3s ease, backdrop-filter 0.3s ease;
 }
 
-:root.dark-mode .navbar {
-  background-color: #1a1a1a;
+.nav--scrolled {
+  background: var(--paper);
+  background: color-mix(in srgb, var(--paper) 88%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom-color: var(--line);
 }
 
-.navbar-container {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 0 2rem;
+.nav__inner {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: center;
+  gap: 2rem;
+  min-height: 78px;
 }
 
-.navbar-logo {
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  height: 50px;
+.nav__brand {
+  display: block;
+  flex: none;
+  transition: opacity 0.2s ease;
 }
 
-.navbar-logo:hover {
-  opacity: 0.8;
-  transform: scale(1.05);
+.nav__brand:hover {
+  opacity: 0.72;
 }
 
-.logo-image {
-  height: 100%;
+.nav__brand img {
+  height: 34px;
   width: auto;
-  max-width: 180px;
-  object-fit: contain;
 }
 
-.menu-toggle {
-  display: none;
-  flex-direction: column;
-  cursor: pointer;
-  gap: 5px;
-}
-
-.menu-toggle span {
-  width: 25px;
-  height: 3px;
-  background-color: var(--text-dark);
-  border-radius: 3px;
-  transition: all 0.3s ease;
-}
-
-.menu-toggle span.active:nth-child(1) {
-  transform: rotate(45deg) translate(10px, 10px);
-}
-
-.menu-toggle span.active:nth-child(2) {
-  opacity: 0;
-}
-
-.menu-toggle span.active:nth-child(3) {
-  transform: rotate(-45deg) translate(7px, -7px);
-}
-
-.nav-menu {
+.nav__links {
   display: flex;
-  list-style: none;
-  gap: 2.5rem;
   align-items: center;
+  gap: clamp(1.25rem, 2.6vw, 2.4rem);
+  margin-left: auto;
 }
 
-.nav-item {
+.nav__link {
   position: relative;
-}
-
-.nav-link {
-  color: var(--text-dark);
+  font-size: 0.88rem;
   font-weight: 500;
-  font-size: 0.95rem;
-  transition: all 0.3s ease;
-  padding: 0.5rem 0;
-  border-bottom: 2px solid transparent;
+  color: var(--ink-soft);
+  padding-block: 0.4rem;
+  transition: color 0.2s ease;
 }
 
-.nav-link:hover {
-  color: var(--primary-color);
-  border-bottom-color: var(--primary-color);
+.nav__link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 1.5px;
+  width: 100%;
+  background: var(--brand);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s var(--ease);
 }
 
-.nav-cta {
-  background: linear-gradient(135deg, var(--primary-color), #3568e0);
-  color: #ffffff !important;
-  padding: 0.6rem 1.5rem;
-  border-radius: 6px;
-  border: none;
+.nav__link:hover,
+.nav__link.is-active,
+.nav__link.is-active::after,
+.nav__link:hover::after {
+  color: var(--brand);
+}
+
+.nav__link.is-active::after,
+.nav__link:hover::after {
+  transform: scaleX(1);
+}
+
+.nav__link--cta {
+  color: var(--ink);
   font-weight: 600;
-  transition: all 0.3s ease;
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
 }
 
-.nav-cta:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(64, 129, 242, 0.3);
-  border-bottom: none;
+.nav__link--cta span {
+  color: var(--accent);
 }
 
-.dark-mode-toggle {
-  background: none;
-  border: 1px solid var(--border-light);
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
+.nav__actions {
   display: flex;
   align-items: center;
-  justify-content: center;
-  color: var(--text-dark);
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: 1.1rem;
+  gap: 0.5rem;
 }
 
-.dark-mode-toggle:hover {
-  background-color: var(--light-bg);
-  border-color: var(--primary-color);
-  color: var(--primary-color);
-  transform: scale(1.1);
+.icon-btn {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink-soft);
+  transition: border-color 0.2s ease, color 0.2s ease, background-color 0.2s ease;
 }
 
-@media (max-width: 768px) {
-  .navbar-container {
-    padding: 0 1.5rem;
+.icon-btn:hover {
+  color: var(--brand);
+  border-color: var(--brand);
+  background: var(--brand-soft);
+}
+
+.nav__burger {
+  display: none;
+}
+
+.nav__burger span {
+  position: absolute;
+  width: 16px;
+  height: 1.5px;
+  background: currentColor;
+  transition: transform 0.25s ease;
+}
+
+.nav__burger span:first-child {
+  transform: translateY(-3px);
+}
+
+.nav__burger span:last-child {
+  transform: translateY(3px);
+}
+
+.nav__burger span:first-child.is-open {
+  transform: rotate(45deg);
+}
+
+.nav__burger span:last-child.is-open {
+  transform: rotate(-45deg);
+}
+
+@media (max-width: 860px) {
+  .nav__burger {
+    display: grid;
   }
 
-  .menu-toggle {
-    display: flex;
-  }
-
-  .nav-menu {
+  .nav__links {
     position: absolute;
-    top: 70px;
+    top: 100%;
     left: 0;
-    width: 100%;
-    background-color: #ffffff;
+    right: 0;
     flex-direction: column;
-    gap: 1rem;
-    padding: 0 1.5rem;
-    border-bottom: 1px solid var(--border-light);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    align-items: stretch;
+    gap: 0;
+    margin: 0;
+    padding: 0 var(--gutter);
+    background: var(--paper);
+    border-bottom: 1px solid var(--line);
     max-height: 0;
     overflow: hidden;
-    transition: max-height 0.3s ease;
+    opacity: 0;
+    transition: max-height 0.35s var(--ease), opacity 0.25s ease, padding 0.35s var(--ease);
   }
 
-  :root.dark-mode .nav-menu {
-    background-color: #1a1a1a;
+  .nav__links.is-open {
+    max-height: 420px;
+    opacity: 1;
+    padding-block: 1rem 1.5rem;
   }
 
-  .nav-menu.active {
-    max-height: 400px;
-    padding: 2rem 1.5rem;
+  .nav__link {
+    padding-block: 0.85rem;
+    border-bottom: 1px solid var(--line);
+    font-size: 1rem;
   }
 
-  .nav-item {
-    width: 100%;
+  .nav__link::after {
+    display: none;
   }
 
-  .nav-link {
-    display: block;
-    padding: 0.8rem 0;
-  }
-
-  .nav-cta {
-    display: block;
-    text-align: center;
-  }
-
-  .dark-mode-toggle {
-    width: 100%;
-    border-radius: 6px;
+  .nav__link--cta {
+    border-bottom: 0;
+    margin-top: 0.5rem;
   }
 }
 </style>

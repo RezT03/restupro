@@ -1,19 +1,11 @@
-# Restu Production - robots.txt
-# Allow all search engines to crawl the site
+# Restu Production — robots.txt
 
 User-agent: *
 Allow: /
-Disallow: /node_modules/
-
-# Specific rules for major search engines
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-# Crawl delay (optional)
-Crawl-delay: 1
+Disallow: /admin
+Disallow: /api/
+Disallow: /data/
+Allow: /media/
 
 # Sitemap location
 Sitemap: https://restuproduction.com/sitemap.xml

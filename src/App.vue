@@ -1,81 +1,104 @@
 <script setup>
-import { RouterView } from 'vue-router'
-import { onMounted } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { RouterView, useRoute } from 'vue-router'
 import Navbar from './components/Navbar.vue'
 import Footer from './components/Footer.vue'
+import { loadSettings } from './utils/settings'
+
+const route = useRoute()
+const bare = computed(() => Boolean(route.meta.bare))
+const progress = ref(0)
+let ticking = false
+
+function updateProgress() {
+  const height = document.documentElement.scrollHeight - window.innerHeight
+  progress.value = height > 0 ? Math.min((window.scrollY / height) * 100, 100) : 0
+  ticking = false
+}
+
+function onScroll() {
+  if (!ticking) {
+    ticking = true
+    requestAnimationFrame(updateProgress)
+  }
+}
+
+/** ScrollBehavior router kelewatan saat pindah halaman + transisi, jadi dibantu di sini. */
+function scrollToHash() {
+  if (!route.hash) return
+  const id = decodeURIComponent(route.hash.slice(1))
+  const el = document.getElementById(id)
+  if (!el) return
+  const top = el.getBoundingClientRect().top + window.scrollY - 84
+  if (Math.abs(window.scrollY - top) < 4) return
+  window.scrollTo({ top, behavior: 'smooth' })
+}
+
+let hashTimer
+
+watch(
+  () => route.fullPath,
+  async () => {
+    await nextTick()
+    scrollToHash()
+    clearTimeout(hashTimer)
+    // Tunggu transisi halaman selesai sebelum elemen tujuan tersedia.
+    hashTimer = setTimeout(scrollToHash, 300)
+  },
+)
 
 onMounted(() => {
-  // Check if dark mode is enabled in localStorage
-  const isDarkMode = localStorage.getItem('darkMode') === 'true'
-  if (isDarkMode) {
-    document.documentElement.classList.add('dark-mode')
-  }
+  window.addEventListener('scroll', onScroll, { passive: true })
+  updateProgress()
+  loadSettings()
+  scrollToHash()
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', onScroll)
+  clearTimeout(hashTimer)
 })
 </script>
 
 <template>
-  <Navbar />
-  <main>
-    <RouterView />
+  <a class="skip-link" href="#main">Lewati ke konten</a>
+  <div class="scroll-progress" :style="{ transform: `scaleX(${progress / 100})` }" aria-hidden="true" />
+
+  <Navbar v-if="!bare" />
+
+  <main id="main">
+    <RouterView v-slot="{ Component }">
+      <Transition name="page" mode="out-in">
+        <component :is="Component" :key="route.path" />
+      </Transition>
+    </RouterView>
   </main>
-  <Footer />
+
+  <Footer v-if="!bare" />
 </template>
 
-<style>
-:root {
-  --primary-color: #4081f2;
-  --secondary-color: #f23d4c;
-  --dark-bg: #0f0f0f;
-  --light-bg: #f8f9fa;
-  --text-dark: #1a1a1a;
-  --text-light: #666666;
-  --border-light: #e5e5e5;
+<style scoped>
+.scroll-progress {
+  position: fixed;
+  inset: 0 0 auto;
+  height: 2px;
+  z-index: 120;
+  background: var(--brand);
+  transform-origin: left center;
+  pointer-events: none;
 }
 
-:root.dark-mode {
-  --text-dark: #ffffff;
-  --text-light: #cccccc;
-  --light-bg: #1a1a1a;
-  --dark-bg: #0f0f0f;
-  --border-light: #333333;
+.page-enter-active,
+.page-leave-active {
+  transition: opacity 0.22s ease, transform 0.22s ease;
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+.page-enter-from {
+  opacity: 0;
+  transform: translateY(8px);
 }
 
-html {
-  scroll-behavior: smooth;
-}
-
-body {
-  font-family: 'Inter', sans-serif;
-  color: var(--text-dark);
-  background-color: #ffffff;
-  line-height: 1.6;
-  transition:
-    background-color 0.3s ease,
-    color 0.3s ease;
-}
-
-:root.dark-mode body {
-  background-color: #0f0f0f;
-}
-
-main {
-  min-height: 100vh;
-}
-
-a {
-  text-decoration: none;
-  color: inherit;
-}
-
-button {
-  font-family: 'Inter', sans-serif;
-  cursor: pointer;
-  border: none;
+.page-leave-to {
+  opacity: 0;
 }
 </style>

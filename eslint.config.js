@@ -23,6 +23,15 @@ export default defineConfig([
   },
 
   js.configs.recommended,
+  {
+    name: 'node/runtime',
+    files: ['server/**/*.js', 'scripts/**/*.js', '*.config.js'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
+    },
+  },
   ...pluginVue.configs['flat/essential'],
   
   {

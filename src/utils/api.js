@@ -1,84 +1,101 @@
-// File ini adalah template untuk konfigurasi API client
-// Letakkan di: src/utils/api.js atau src/services/api.js
+/**
+ * Client API kecil di atas fetch.
+ * - Dev: Vite mem-proxy /api dan /media ke Express (lihat vite.config.js).
+ * - Prod: Express menyajikan dist/, jadi origin tetap sama.
+ * - CSRF token disimpan di memory (bukan localStorage) dan dikirim lewat header.
+ */
 
-// Konfigurasi API endpoint
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
+let csrfToken = ''
 
-// Create axios instance atau fetch wrapper
-const apiClient = {
-  // Get invoice by number
-  async getInvoice(invoiceNumber) {
-    try {
-      const response = await fetch(`${API_BASE_URL}/invoices/${invoiceNumber}`)
-      if (!response.ok) throw new Error('Invoice not found')
-      return await response.json()
-    } catch (error) {
-      console.error('Error fetching invoice:', error)
-      throw error
-    }
-  },
+const MUTATIONS = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
 
-  // Create new invoice
-  async createInvoice(data) {
-    try {
-      const response = await fetch(`${API_BASE_URL}/invoices`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      })
-      if (!response.ok) throw new Error('Failed to create invoice')
-      return await response.json()
-    } catch (error) {
-      console.error('Error creating invoice:', error)
-      throw error
-    }
-  },
-
-  // Get all equipment
-  async getEquipment() {
-    try {
-      const response = await fetch(`${API_BASE_URL}/equipment`)
-      if (!response.ok) throw new Error('Failed to fetch equipment')
-      return await response.json()
-    } catch (error) {
-      console.error('Error fetching equipment:', error)
-      throw error
-    }
-  },
-
-  // Update invoice
-  async updateInvoice(invoiceId, data) {
-    try {
-      const response = await fetch(`${API_BASE_URL}/invoices/${invoiceId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      })
-      if (!response.ok) throw new Error('Failed to update invoice')
-      return await response.json()
-    } catch (error) {
-      console.error('Error updating invoice:', error)
-      throw error
-    }
-  },
-
-  // Delete invoice
-  async deleteInvoice(invoiceId) {
-    try {
-      const response = await fetch(`${API_BASE_URL}/invoices/${invoiceId}`, {
-        method: 'DELETE',
-      })
-      if (!response.ok) throw new Error('Failed to delete invoice')
-      return await response.json()
-    } catch (error) {
-      console.error('Error deleting invoice:', error)
-      throw error
-    }
-  },
+export function setCsrfToken(token) {
+  csrfToken = token || ''
 }
 
-export default apiClient
+export function getCsrfToken() {
+  return csrfToken
+}
+
+export class ApiError extends Error {
+  constructor(message, status, payload) {
+    super(message)
+    this.name = 'ApiError'
+    this.status = status
+    this.payload = payload
+  }
+}
+
+export async function apiFetch(path, options = {}) {
+  const { method = 'GET', body, form, headers = {}, signal, ...rest } = options
+  const requestHeaders = { ...headers, 'X-Requested-With': 'RestuPro' }
+
+  if (MUTATIONS.has(method.toUpperCase()) && csrfToken) {
+    requestHeaders['X-CSRF-Token'] = csrfToken
+  }
+
+  let payload = body
+  if (body !== undefined && !(body instanceof FormData) && typeof body !== 'string') {
+    requestHeaders['Content-Type'] = 'application/json'
+    payload = JSON.stringify(body)
+  }
+
+  let response
+  try {
+    response = await fetch(`/api${path}`, {
+      method,
+      headers: requestHeaders,
+      body: form || payload,
+      credentials: 'same-origin',
+      signal,
+      ...rest,
+    })
+  } catch {
+    throw new ApiError('Tidak dapat terhubung ke server. Periksa koneksi Anda.', 0)
+  }
+
+  const contentType = response.headers.get('content-type') || ''
+  const data = contentType.includes('application/json') ? await response.json() : null
+
+  if (!response.ok) {
+    throw new ApiError(data?.error || `Permintaan gagal (${response.status})`, response.status, data)
+  }
+
+  if (data?.csrfToken) setCsrfToken(data.csrfToken)
+  return data
+}
+
+export const publicApi = {
+  projects: (params = {}) => {
+    const query = new URLSearchParams(params).toString()
+    return apiFetch(`/projects${query ? `?${query}` : ''}`)
+  },
+  project: (slug) => apiFetch(`/projects/${encodeURIComponent(slug)}`),
+  settings: () => apiFetch('/settings'),
+}
+
+export const adminApi = {
+  me: () => apiFetch('/auth/me'),
+  login: (email, password) =>
+    apiFetch('/auth/login', { method: 'POST', body: { email, password } }),
+  logout: () => apiFetch('/auth/logout', { method: 'POST' }),
+  projects: () => apiFetch('/admin/projects'),
+  media: () => apiFetch('/admin/media'),
+  saveProject: (data, id) =>
+    apiFetch(id ? `/admin/projects/${id}` : '/admin/projects', {
+      method: id ? 'PUT' : 'POST',
+      body: data,
+    }),
+  deleteProject: (id) => apiFetch(`/admin/projects/${id}`, { method: 'DELETE' }),
+  uploadMedia: (files) => {
+    const form = new FormData()
+    files.forEach((file) => form.append('files', file))
+    return apiFetch('/admin/media', { method: 'POST', form })
+  },
+  deleteMedia: (id) => apiFetch(`/admin/media/${id}`, { method: 'DELETE' }),
+  getSettings: () => apiFetch('/admin/settings'),
+  saveSettings: (settings) =>
+    apiFetch('/admin/settings', { method: 'PUT', body: { settings } }),
+}
+
+export default apiFetch

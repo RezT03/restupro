@@ -1,121 +1,97 @@
-# Restu Production - Event Equipment Rental Website
+# Restu Production
 
-🎉 Website single page modern untuk rental perlengkapan event, dibangun dengan **Vue.js 3**, **Vite**, dan **Vue Router**.
+Website sewa perlengkapan event berbasis **Vue 3 + Vite** di frontend dan **Node.js + Express** di backend.
 
-## Recommended IDE Setup
+## Fitur
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar)
+- Beranda dengan sistem desain editorial, carousel perlengkapan scroll-snap, dan animasi masuk yang ringan.
+- Halaman **`/project`** + detail proyek bergaya artikel dengan galeri dan lightbox.
+- Panel admin **`/admin`** untuk kelola proyek, upload media (gambar dikompres otomatis ke WebP), serta mengubah nomor telepon dan media sosial.
+- Penyimpanan memakai **MySQL** (database `restupro`): pengaturan, proyek, media sebagai blob, **dan akun admin**.
+- SEO: meta default di `index.html`, canonical + OpenGraph/Twitter per rute, JSON-LD, `robots.txt`, dan `sitemap.xml`.
+- Mode gelap, navigasi responsif, lazy loading gambar, dan fallback bila API belum tersedia.
 
-## ✨ Fitur Utama
+## Menjalankan
 
-### 🎨 Landing Page
-
-- **Hero Section**: Banner utama dengan animasi background dan CTA buttons
-- **Equipment Showcase**: 6 jenis perlengkapan dengan deskripsi lengkap
-- **Features Section**: Keunggulan Restu Production
-- **Contact Section**: Informasi kontak dan call-to-action
-
-### 📄 Invoice Management
-
-- **Create Invoice**: Form untuk membuat invoice dengan equipment selection
-- **Check Invoice**: Pencarian invoice berdasarkan nomor
-- **Responsive Design**: Mobile-friendly interface
-
-## 📁 Project Structure
-
-```
-src/
-├── components/
-│   ├── Navbar.vue              # Navigation sticky
-│   ├── Footer.vue              # Footer
-│   ├── HeroSection.vue         # Hero dengan animasi
-│   ├── EquipmentList.vue       # Equipment showcase
-│   ├── FeaturesSection.vue     # Keunggulan
-│   └── ContactSection.vue      # Kontak & CTA
-├── views/
-│   ├── HomeView.vue            # Landing page
-│   ├── InvoiceView.vue         # Invoice management
-│   └── AboutView.vue           # About
-├── router/
-│   └── index.js                # Routing
-├── utils/
-│   └── api.js                  # API client
-└── assets/                     # Styles & images
-```
-
-## 🚀 Quick Start
-
-```sh
-# Install dependencies
+```bash
 npm install
+npm run setup:server          # install dependency Express
 
-# Run development server
-npm run dev
+cp server/.env.example server/.env
+# isi DB_USER / DB_PASSWORD
+# database `restupro` beserta tabelnya dibuat otomatis saat server pertama kali jalan
+# akun admin dibuat dari ADMIN_EMAIL + ADMIN_PASSWORD_HASH saat tabel admins masih kosong
 
-# Build for production
+npm run migrate --prefix server  # opsional: pindahkan data lama dari server/data/content.json
+npm run dev:full                 # Vite :5173 + Express :3510
+```
+
+Buka http://localhost:5173. Panel admin di http://localhost:5173/admin.
+
+Mode terpisah:
+
+```bash
+npm run dev        # hanya frontend (butuh API berjalan untuk data proyek)
+npm run dev:api    # hanya backend
+```
+
+### Akun admin
+
+Akun admin disimpan di tabel MySQL `admins`, bukan lagi di `.env`. Variabel `ADMIN_EMAIL` dan
+`ADMIN_PASSWORD_HASH`/`ADMIN_PASSWORD` hanya dipakai **sekali** saat tabel masih kosong (bootstrap).
+
+```bash
+cd server
+npm run admin -- list                          # lihat daftar admin
+npm run admin -- add admin@domain.com          # tambah admin (password ditanyakan)
+npm run admin -- password                      # ganti password (auto pilih satu-satunya admin)
+npm run admin -- password admin@domain.com     # ganti password admin tertentu
+npm run admin -- email lama@domain.com baru@domain.com
+npm run admin -- remove admin@domain.com       # tidak bisa menghapus admin terakhir
+```
+
+Hash scrypt juga bisa dibuat terpisah dengan `npm run hash-password`, lalu disalin ke kolom
+`password_hash`. Password minimal 12 karakter. Sesi aktif tetap berlaku hingga kedaluwarsa atau
+server di-restart setelah ganti password.
+
+## Build & produksi
+
+```bash
 npm run build
-
-# Preview build
-npm run preview
+npm start                      # Express menyajikan folder dist/ + API di satu origin
 ```
 
-## 📝 Available Commands
+Pastikan `NODE_ENV=production`, `SITE_URL=https://restuproduction.com`, `TRUST_PROXY=true` bila
+di belakang reverse proxy, kredensial `DB_*` benar, dan sudah ada minimal satu baris di tabel
+`admins`. Untuk bootstrap pertama, isi `ADMIN_EMAIL` + `ADMIN_PASSWORD_HASH` di `.env`, jalankan
+server sekali, lalu hapus keduanya.
 
-```sh
-npm run dev        # Development server
-npm run build      # Production build
-npm run preview    # Preview build
-npm run test:unit  # Unit tests
-npm run test:e2e   # E2E tests
-npm run lint       # Lint & fix
-npm run format     # Format code
+## Struktur singkat
+
+```
+src/            frontend Vue (components, views, router, utils)
+server/         Express API, auth, MySQL, upload & kompresi
+  src/db.js     pool koneksi + skema tabel MySQL
+  data/         backup legacy content.json + uploads/ (tidak dipakai runtime, gitignore)
+scripts/dev.js  menjalankan Vite + Express bersamaan
+public/         favicon, robots.txt, sitemap.xml, gambar statis
 ```
 
-## 🎨 Colors & Design
+## Keamanan (ringkas)
 
-- **Primary**: #4081f2 (Blue)
-- **Secondary**: #f23d4c (Light Red)
-- **Font**: Inter, Poppins/Montserrat
+- Sesi httpOnly + `SameSite=Strict` + `Secure` di production, token disimpan ter-hash di memory.
+- CSRF: header khusus, pemeriksaan Origin/Referer, dan token CSRF per sesi.
+- Rate limiting login & API, `scrypt` untuk kata sandi, timing-safe comparison.
+- Upload: validasi magic bytes, batas ukuran, nama acak, kompresi WebP, metadata dihapus.
+- Header: CSP, nosniff, frame-ancestors none, Referrer-Policy, Permissions-Policy, HSTS.
+- Data admin dan blob media tidak pernah disajikan langsung sebagai file sistem; akses media hanya lewat endpoint `/media/:filename` yang tervalidasi.
+- Query MySQL memakai prepared statement; nama database divalidasi sebelum dipakai dalam DDL.
 
-## 🔗 Routes
+## Dokumentasi tambahan
 
-| Route      | Description        |
-| ---------- | ------------------ |
-| `/`        | Landing page       |
-| `/invoice` | Invoice management |
-| `/about`   | About page         |
+- [`docs/ASSETS_NEEDED.md`](./docs/ASSETS_NEEDED.md) — daftar gambar yang perlu Anda sediakan sendiri.
+- [`docs/DEPLOYMENT.md`](./docs/DEPLOYMENT.md) — catatan deploy & environment.
 
-## 📱 Responsive
+## Warna brand
 
-- Mobile-first design
-- Hamburger menu for mobile
-- Fully responsive grid layout
-- Touch-friendly buttons
-
-## 🔄 Backend Integration
-
-API endpoints ready at `src/utils/api.js`:
-
-- `POST /api/invoices` - Create invoice
-- `GET /api/invoices/:id` - Get invoice
-- `GET /api/equipment` - Get equipment
-
-## 📖 Documentation
-
-- **[SETUP.md](./SETUP.md)** - Detailed setup guide
-- **[BACKEND_SETUP.md](./BACKEND_SETUP.md)** - Backend Node.js template
-
-## 📞 Contact
-
-**Restu Production**
-
-- Email: info@restuproduction.com
-- WhatsApp: +62 XXX XXXX XXXX
-
-## 📄 License
-
-MIT License
-
----
-
-Made with Vue.js 3 + Vite ⚡
+Biru `#4081f2`, merah `#f23d4c`, font Inter (teks) dan Poppins (judul).

@@ -1,42 +1,62 @@
 <script setup>
-// import { RouterLink } from 'vue-router'
+import { computed } from 'vue'
+import { siteSettings, whatsappLink } from '../utils/settings'
+
+const wa = computed(() => whatsappLink())
+const phoneList = computed(() => siteSettings.value.phones || [])
 </script>
 
 <template>
-  <section id="contact" class="contact-section">
-    <div class="contact-container">
-      <div class="contact-content">
-        <h2>Siap untuk mengadakan Acara?</h2>
-        <p>Hubungi kami hari ini untuk mengetahui lebih lanjut tentang perlengkapan event kami</p>
+  <section id="contact" class="contact">
+    <div class="wrap contact__grid">
+      <div class="contact__lead" v-reveal>
+        <p class="eyebrow contact__eyebrow">04 / Kontak</p>
+        <h2 class="h2">Ceritakan acara Anda.<br />Kami bantu siapkan alatnya.</h2>
+        <p>
+          Konsultasi awal tidak berbayar. Sebutkan tanggal dan lokasi acara, kami akan bantu
+          menyesuaikan perlengkapan yang dibutuhkan.
+        </p>
+        <a :href="wa" target="_blank" rel="noopener noreferrer" class="btn btn--light contact__cta">
+          Chat via WhatsApp <span class="btn__arrow" aria-hidden="true">↗</span>
+        </a>
+      </div>
 
-        <div class="contact-methods">
-          <div class="contact-method">
-            <span class="method-icon material-icons">mail</span>
-            <div>
-              <h4>Email</h4>
-              <p>info@restuproduction.com</p>
-            </div>
-          </div>
-
-          <div class="contact-method">
-            <span class="method-icon material-icons">chat</span>
-            <div>
-              <a href="http://wa.me/6282145632380?text=Hai Restu Production. Saya sedang membutuhkan perlengkapan event, bisakah saya mendapatkan detail harga dan cara penyewaan?" target="_blank">
-                <h4>WhatsApp</h4>
-                <p>+62 <i>klik ini lalu chat saja, nanti kami balas</i></p>
-              </a>
-            </div>
-          </div>
-
-          <div class="contact-method">
-            <span class="method-icon material-icons">location_on</span>
-            <div>
-                <a href="https://maps.app.goo.gl/Ro1H2okwg6SGZ1tKA">
-                <h4>Lokasi</h4>
-                <p>Wonosobo, Indonesia</p>
-              </a>
-              </div>
-          </div>
+      <div class="contact__details" v-reveal>
+        <div class="contact__row">
+          <span class="contact__label">Email</span>
+          <a :href="`mailto:${siteSettings.email}`" class="contact__value">{{ siteSettings.email }}</a>
+        </div>
+        <div v-for="phone in phoneList" :key="phone.number" class="contact__row">
+          <span class="contact__label">{{ phone.label || 'Telepon' }}</span>
+          <a
+            v-if="phone.whatsapp"
+            :href="`https://wa.me/${String(phone.number).replace(/\D/g, '')}`"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="contact__value"
+          >
+            {{ phone.display || phone.number }}
+          </a>
+          <a v-else :href="`tel:${phone.number}`" class="contact__value">
+            {{ phone.display || phone.number }}
+          </a>
+        </div>
+        <div class="contact__row">
+          <span class="contact__label">Lokasi</span>
+          <a :href="siteSettings.mapsUrl" target="_blank" rel="noopener noreferrer" class="contact__value">
+            {{ siteSettings.location }} <span aria-hidden="true">↗</span>
+          </a>
+        </div>
+        <div v-if="siteSettings.socials?.length" class="contact__socials">
+          <a
+            v-for="social in siteSettings.socials"
+            :key="social.url"
+            :href="social.url"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {{ social.platform }} ↗
+          </a>
         </div>
       </div>
     </div>
@@ -44,136 +64,103 @@
 </template>
 
 <style scoped>
-.contact-section {
-  padding: 6rem 0;
-  background: linear-gradient(135deg, var(--primary-color), #3568e0);
-  color: #ffffff;
-  transition: background 0.3s ease;
+.contact {
+  background: #102748;
+  color: #fff;
+  padding-block: var(--section-y);
 }
 
-:root.dark-mode .contact-section {
-  background: linear-gradient(135deg, #1a3a6f, #1e2a5f);
-}
-
-.contact-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 2rem;
-  text-align: center;
-}
-
-.contact-content h2 {
-  font-size: 2.5rem;
-  margin-bottom: 1rem;
-}
-
-.contact-content > p {
-  font-size: 1.1rem;
-  margin-bottom: 3rem;
-  opacity: 0.95;
-}
-
-.contact-methods {
+.contact__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 2rem;
-  margin-bottom: 3rem;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr);
+  gap: clamp(2.5rem, 8vw, 8rem);
 }
 
-.contact-method {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  background-color: rgba(255, 255, 255, 0.1);
-  padding: 1.5rem;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  transition: all 0.3s ease;
+.contact__eyebrow {
+  color: rgba(255, 255, 255, 0.65);
 }
 
-.contact-method:hover {
-  background-color: rgba(255, 255, 255, 0.15);
-  transform: translateY(-4px);
+.contact__eyebrow::before {
+  background: var(--accent);
 }
 
-.method-icon {
-  font-size: 2rem;
-  min-width: 50px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.contact__lead h2 {
+  color: #fff;
+  margin-block: 1.2rem 1.4rem;
 }
 
-.contact-method h4 {
-  font-size: 1.1rem;
-  margin-bottom: 0.3rem;
+.contact__lead > p {
+  color: rgba(255, 255, 255, 0.7);
+  max-width: 46ch;
+  font-size: 0.95rem;
 }
 
-.contact-method p {
-  font-size: 0.9rem;
-  opacity: 0.9;
+.contact__cta {
+  margin-top: 2rem;
 }
 
-.contact-cta {
-  display: flex;
+.contact__details {
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  align-self: center;
+}
+
+.contact__row {
+  display: grid;
+  grid-template-columns: 110px 1fr;
   gap: 1rem;
-  justify-content: center;
-  flex-wrap: wrap;
+  padding-block: 1.2rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  align-items: baseline;
 }
 
-.btn {
-  padding: 0.9rem 2rem;
-  border-radius: 8px;
-  font-weight: 600;
+.contact__label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.contact__value {
   font-size: 1rem;
-  transition: all 0.3s ease;
-  display: inline-block;
-  border: 2px solid transparent;
+  font-weight: 500;
+  transition: color 0.2s ease;
 }
 
-.btn-primary {
-  background-color: #ffffff;
-  color: var(--primary-color);
+.contact__value:hover {
+  color: #8db8ff;
 }
 
-.btn-primary:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+.contact__socials {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.2rem;
+  margin-top: 1.6rem;
 }
 
-.btn-secondary {
-  color: #ffffff;
-  border-color: #ffffff;
-  background-color: transparent;
+.contact__socials a {
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.7);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+  padding-bottom: 2px;
 }
 
-.btn-secondary:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+.contact__socials a:hover {
+  color: #fff;
 }
 
-@media (max-width: 768px) {
-  .contact-section {
-    padding: 4rem 0;
-  }
-
-  .contact-container {
-    padding: 0 1.5rem;
-  }
-
-  .contact-content h2 {
-    font-size: 1.8rem;
-  }
-
-  .contact-methods {
+@media (max-width: 820px) {
+  .contact__grid {
     grid-template-columns: 1fr;
-    gap: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .contact__row {
+    grid-template-columns: 1fr;
+    gap: 0.2rem;
   }
 
-  .contact-cta {
-    flex-direction: column;
-  }
-
-  .btn {
+  .contact__cta {
     width: 100%;
   }
 }
