@@ -3,15 +3,16 @@ import { config } from './config.js'
 import { db } from './db.js'
 import { hashPassword } from './auth.js'
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const USERNAME_RE = /^[a-z0-9_.-]{3,50}$/
 const HASH_RE = /^scrypt\$[a-f0-9]+\$[a-f0-9]+$/i
 
 let ready = false
 
 /**
  * Menyiapkan akun admin di MySQL.
- * Variabel ADMIN_* di .env hanya dipakai SEKALI saat tabel admins masih kosong
- * (bootstrap / migrasi). Selanjutnya sumber kebenaran ada di database.
+ * Variabel ADMIN_USERNAME + ADMIN_PASSWORD_HASH di .env hanya dipakai SEKALI
+ * saat tabel admins masih kosong (bootstrap / migrasi). Selanjutnya sumber
+ * kebenaran ada di database.
  */
 export async function initAdminAuth() {
   const [rows] = await db().query('SELECT COUNT(*) AS total FROM admins')
@@ -20,9 +21,9 @@ export async function initAdminAuth() {
     return
   }
 
-  const email = config.adminEmail || 'admin@restuproduction.com'
-  if (!EMAIL_RE.test(email)) {
-    throw new Error('ADMIN_EMAIL tidak valid untuk bootstrap admin.')
+  const username = config.adminUsername || 'admin'
+  if (!USERNAME_RE.test(username)) {
+    throw new Error('ADMIN_USERNAME harus 3–50 karakter: huruf kecil, angka, titik, garis bawah, atau tanda hubung.')
   }
 
   let passwordHash = config.adminPasswordHash
@@ -51,17 +52,17 @@ export async function initAdminAuth() {
 
   const now = new Date().toISOString()
   await db().query(
-    'INSERT INTO admins (email, password_hash, created_at, updated_at) VALUES (?, ?, ?, ?)',
-    [email, passwordHash, now, now],
+    'INSERT INTO admins (username, password_hash, created_at, updated_at) VALUES (?, ?, ?, ?)',
+    [username, passwordHash, now, now],
   )
 
   if (temporary) {
     console.warn('\n[Admin pertama dibuat di MySQL]')
-    console.warn(`Email    : ${email}`)
+    console.warn(`Username : ${username}`)
     console.warn(`Password : ${temporary}`)
     console.warn('Ganti dengan: npm run admin -- password\n')
   } else {
-    console.log(`Admin "${email}" dimigrasikan dari .env ke MySQL.`)
+    console.log(`Admin "${username}" dimigrasikan dari .env ke MySQL.`)
   }
 
   ready = true
@@ -71,12 +72,12 @@ export function assertAdminReady() {
   if (!ready) throw new Error('Admin auth belum diinisialisasi.')
 }
 
-/** Cari akun admin by email. Selalu async agar pemanggil tidak bergantung pada env. */
-export async function findAdminByEmail(email) {
+/** Cari akun admin by username. Selalu async agar tidak bergantung pada env. */
+export async function findAdminByUsername(username) {
   assertAdminReady()
   const [rows] = await db().query(
-    'SELECT id, email, password_hash FROM admins WHERE email = ? LIMIT 1',
-    [String(email).toLowerCase()],
+    'SELECT id, username, password_hash FROM admins WHERE username = ? LIMIT 1',
+    [String(username).toLowerCase()],
   )
   return rows[0] || null
 }

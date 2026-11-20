@@ -52,7 +52,7 @@ export function useSeo(options = {}) {
     ? `${title} — Restu Production`
     : 'Restu Production — Sewa Perlengkapan Event Profesional'
   const url = absoluteUrl(path)
-  const imageUrl = absoluteUrl(image)
+  const imageUrl = image === null ? '' : absoluteUrl(image)
 
   document.title = fullTitle
   ensureMeta('name', 'description', { name: 'description', content: description })
@@ -64,10 +64,16 @@ export function useSeo(options = {}) {
   ensureMeta('property', 'og:description', { property: 'og:description', content: description })
   ensureMeta('property', 'og:url', { property: 'og:url', content: url })
   ensureMeta('property', 'og:type', { property: 'og:type', content: type })
-  ensureMeta('property', 'og:image', { property: 'og:image', content: imageUrl })
   ensureMeta('name', 'twitter:title', { name: 'twitter:title', content: fullTitle })
   ensureMeta('name', 'twitter:description', { name: 'twitter:description', content: description })
-  ensureMeta('name', 'twitter:image', { name: 'twitter:image', content: imageUrl })
+  if (image === null) {
+    // Halaman tanpa gambar sampul tidak boleh memakai gambar default acak.
+    document.head.querySelector('meta[property="og:image"]')?.remove()
+    document.head.querySelector('meta[name="twitter:image"]')?.remove()
+  } else {
+    ensureMeta('property', 'og:image', { property: 'og:image', content: imageUrl })
+    ensureMeta('name', 'twitter:image', { name: 'twitter:image', content: imageUrl })
+  }
   ensureLink('canonical', url)
 
   let ld = document.getElementById('route-jsonld')

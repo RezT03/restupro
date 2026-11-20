@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { publicApi } from '@/utils/api'
 import { formatDate } from '@/utils/format'
@@ -7,6 +7,7 @@ import { loadSettings, whatsappLink } from '@/utils/settings'
 import { useSeo, absoluteUrl } from '@/utils/seo'
 import MediaViewer from '@/components/MediaViewer.vue'
 import ProjectCard from '@/components/ProjectCard.vue'
+import BlankThumbnail from '@/components/BlankThumbnail.vue'
 
 const route = useRoute()
 const project = ref(null)
@@ -15,10 +16,67 @@ const loading = ref(true)
 const notFound = ref(false)
 const viewerIndex = ref(-1)
 
+// Informasi proyek: fixed setelah posisi aslinya tercapai, memudar sebelum footer.
+const asideEl = ref(null)
+const asideSlot = ref(null)
+const asideFixed = ref(false)
+const asideHidden = ref(false)
+const asideSlotHeight = ref(0)
+let asideNaturalTop = 0
+let asideFrame = 0
+let asideNeedsMeasure = false
+
+function measureAside() {
+  const el = asideEl.value
+  if (!el || asideFixed.value) return
+  asideSlotHeight.value = el.offsetHeight
+  asideNaturalTop = el.getBoundingClientRect().top + window.scrollY
+}
+
+function updateAside() {
+  const el = asideEl.value
+  if (!el || !project.value || window.innerWidth <= 960) {
+    asideFixed.value = false
+    asideHidden.value = false
+    return
+  }
+  if (!asideSlotHeight.value) measureAside()
+
+  const top = 110
+  // Jangan pernah fixed sampul masih berada di area panel (mis. setelah resize
+  // atau saat posisi restored), supaya panel tidak menutupi gambar proyek.
+  const cover = document.querySelector('.detail__cover')
+  const coverBottom = cover ? cover.getBoundingClientRect().bottom : -Infinity
+  const shouldFix = window.scrollY >= asideNaturalTop - top && coverBottom <= top - 8
+  asideFixed.value = shouldFix
+
+  const footer = document.querySelector('.footer')
+  const footerTop = footer ? footer.getBoundingClientRect().top : Infinity
+  asideHidden.value = shouldFix && footerTop < top + asideSlotHeight.value + 24
+}
+
+function onAsideScroll() {
+  if (asideFrame) return
+  asideFrame = requestAnimationFrame(() => {
+    asideFrame = 0
+    if (asideNeedsMeasure) {
+      asideNeedsMeasure = false
+      asideFixed.value = false
+      measureAside()
+    }
+    updateAside()
+  })
+}
+
+function onAsideResize() {
+  asideNeedsMeasure = true
+  onAsideScroll()
+}
+
 const gallery = computed(() => project.value?.gallery || [])
 const otherMedia = computed(() => project.value?.media || [])
-const fallbackCover = '/images/stage.png'
-const cover = computed(() => project.value?.cover?.url || project.value?.cover || fallbackCover)
+// Sampul kosong tidak diisi dengan gambar acak; placeholder ditampilkan di template.
+const cover = computed(() => project.value?.cover?.url || project.value?.cover || '')
 const wa = computed(() =>
   whatsappLink(undefined, `Hai Restu Production, saya tertarik dengan proyek "${project.value?.title || ''}". Bisa saya konsultasikan kebutuhan serupa?`),
 )
@@ -29,14 +87,14 @@ function applySeo(item) {
     title: item.title,
     description,
     path: `/project/${item.slug}`,
-    image: cover.value,
+    image: cover.value || null,
     type: 'article',
     structuredData: {
       '@context': 'https://schema.org',
       '@type': 'Article',
       headline: item.title,
       description,
-      image: absoluteUrl(cover.value),
+      ...(cover.value ? { image: absoluteUrl(cover.value) } : {}),
       datePublished: item.createdAt,
       dateModified: item.updatedAt || item.createdAt,
       author: { '@id': 'https://restuproduction.com/#organization' },
@@ -51,6 +109,10 @@ async function load(slug) {
   notFound.value = false
   project.value = null
   related.value = []
+  asideFixed.value = false
+  asideHidden.value = false
+  asideSlotHeight.value = 0
+  asideNaturalTop = 0
   try {
     const data = await publicApi.project(slug)
     project.value = data.project
@@ -66,12 +128,24 @@ async function load(slug) {
     })
   } finally {
     loading.value = false
+    nextTick(() => {
+      measureAside()
+      updateAside()
+    })
   }
 }
 
 onMounted(() => {
   loadSettings()
+  window.addEventListener('scroll', onAsideScroll, { passive: true })
+  window.addEventListener('resize', onAsideResize, { passive: true })
   load(route.params.slug)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', onAsideScroll)
+  window.removeEventListener('resize', onAsideResize)
+  if (asideFrame) cancelAnimationFrame(asideFrame)
 })
 
 watch(() => route.params.slug, (slug) => slug && load(slug))
@@ -80,9 +154,9 @@ watch(() => route.params.slug, (slug) => slug && load(slug))
 <template>
   <article class="detail">
     <div v-if="loading" class="wrap detail__loading">
-      <div class="skeleton" style="height: 1rem; width: 30%"></div>
-      <div class="skeleton" style="height: 4rem; width: 80%; margin-top: 1.5rem"></div>
-      <div class="skeleton" style="height: 22rem; margin-top: 2.5rem"></div>
+      <div class="skeleton skeleton--eyebrow"></div>
+      <div class="skeleton skeleton--title"></div>
+      <div class="skeleton skeleton--cover"></div>
     </div>
 
     <div v-else-if="notFound" class="wrap detail__missing">
@@ -102,8 +176,11 @@ watch(() => route.params.slug, (slug) => slug && load(slug))
         </div>
       </header>
 
-      <div class="wrap detail__cover">
+      <div v-if="cover" class="wrap detail__cover">
         <img :src="cover" :alt="project.cover?.alt || project.title" width="1400" height="800" decoding="async" />
+      </div>
+      <div v-else class="wrap detail__cover detail__cover--blank">
+        <BlankThumbnail :label="`Belum ada sampul untuk ${project.title}`" />
       </div>
 
       <div class="wrap detail__layout">
@@ -149,251 +226,39 @@ watch(() => route.params.slug, (slug) => slug && load(slug))
           </div>
         </div>
 
-        <aside class="detail__aside">
-          <h2>Informasi proyek</h2>
-          <dl>
-            <div v-if="project.client"><dt>Klien</dt><dd>{{ project.client }}</dd></div>
-            <div v-if="project.location"><dt>Lokasi</dt><dd>{{ project.location }}</dd></div>
-            <div v-if="project.eventDate"><dt>Tanggal</dt><dd>{{ formatDate(project.eventDate) }}</dd></div>
-            <div><dt>Kategori</dt><dd>{{ project.category || 'Proyek' }}</dd></div>
-          </dl>
-        </aside>
-      </div>
+        <div
+          ref="asideSlot"
+          class="detail__aside-slot"
+          :style="asideSlotHeight ? { minHeight: `${asideSlotHeight}px` } : undefined"
+        >
+          <aside
+            ref="asideEl"
+            class="detail__aside"
+            :class="{ 'is-fixed': asideFixed, 'is-hidden': asideHidden }"
+          >
+            <h2>Informasi proyek</h2>
+            <dl>
+              <div v-if="project.client"><dt>Klien</dt><dd>{{ project.client }}</dd></div>
+              <div v-if="project.location"><dt>Lokasi</dt><dd>{{ project.location }}</dd></div>
+              <div v-if="project.eventDate"><dt>Tanggal</dt><dd>{{ formatDate(project.eventDate) }}</dd></div>
+              <div><dt>Kategori</dt><dd>{{ project.category || 'Proyek' }}</dd></div>
+            </dl>
+          </aside>
+        </div>
 
-      <section v-if="related.length" class="section detail__related">
-        <div class="wrap">
+        <!-- Berada di dalam grid yang sama dengan aside agar aside tetap menempel
+             sampai melewati bagian proyek terkait, bukan berhenti di body saja. -->
+        <section v-if="related.length" class="detail__related">
           <h2 class="h2">Proyek lainnya</h2>
           <div class="detail__related-grid">
             <ProjectCard v-for="(item, i) in related" :key="item.id" :project="item" :index="i" />
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
 
       <MediaViewer v-model="viewerIndex" :items="gallery" />
     </template>
   </article>
 </template>
 
-<style scoped>
-.detail__loading,
-.detail__missing {
-  min-height: 60vh;
-  padding-block: 5rem;
-}
-
-.detail__missing .lead {
-  margin-block: 1rem 2rem;
-}
-
-.detail__header {
-  padding-block: clamp(2.5rem, 6vw, 5rem) 2.5rem;
-  background: var(--surface);
-  border-bottom: 1px solid var(--line);
-}
-
-.detail__back {
-  display: inline-block;
-  color: var(--brand);
-  font-size: 0.85rem;
-  font-weight: 600;
-  margin-bottom: 2.5rem;
-}
-
-.detail__header .eyebrow {
-  color: var(--brand);
-}
-
-.detail__title {
-  margin-block: 1.1rem 1.2rem;
-  max-width: 22ch;
-}
-
-.detail__excerpt {
-  max-width: 65ch;
-}
-
-.detail__cover {
-  margin-block: 2rem;
-}
-
-.detail__cover img {
-  width: 100%;
-  max-height: 520px;
-  aspect-ratio: 16 / 8;
-  object-fit: cover;
-  border-radius: var(--radius-lg);
-  background: var(--brand-soft);
-}
-
-.detail__layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 270px;
-  gap: clamp(2rem, 6vw, 6rem);
-  padding-top: 1.5rem;
-}
-
-.detail__content {
-  white-space: pre-line;
-  font-size: 1.02rem;
-  line-height: 1.9;
-  color: var(--ink-soft);
-  max-width: 68ch;
-}
-
-.detail__gallery,
-.detail__media {
-  margin-top: 3.5rem;
-}
-
-.detail__gallery h2,
-.detail__media h2,
-.detail__aside h2 {
-  font-size: 1.15rem;
-  margin-bottom: 1.2rem;
-}
-
-.detail__gallery-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.8rem;
-}
-
-.detail__thumb {
-  border: 0;
-  padding: 0;
-  background: var(--brand-soft);
-  border-radius: var(--radius);
-  overflow: hidden;
-  aspect-ratio: 4 / 3;
-}
-
-.detail__thumb img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.5s var(--ease);
-}
-
-.detail__thumb:hover img {
-  transform: scale(1.06);
-}
-
-.detail__media ul {
-  border-top: 1px solid var(--line);
-}
-
-.detail__media li {
-  border-bottom: 1px solid var(--line);
-}
-
-.detail__media a {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding-block: 0.9rem;
-  font-size: 0.9rem;
-  color: var(--brand);
-}
-
-.detail__media-type {
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  color: var(--ink-faint);
-  border: 1px solid var(--line);
-  padding: 0.15rem 0.4rem;
-  border-radius: 2px;
-}
-
-.detail__aside {
-  align-self: start;
-  position: sticky;
-  top: 110px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  padding: 1.5rem;
-}
-
-.detail__aside dl div {
-  padding-block: 0.8rem;
-  border-top: 1px solid var(--line);
-}
-
-.detail__aside dt {
-  font-size: 0.68rem;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--ink-faint);
-}
-
-.detail__aside dd {
-  font-size: 0.9rem;
-  font-weight: 500;
-  margin-top: 0.2rem;
-}
-
-.detail__cta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 1.5rem;
-  margin-top: 3.5rem;
-  padding: 1.8rem;
-  background: var(--brand-soft);
-  border-radius: var(--radius-lg);
-}
-
-.detail__cta h3 {
-  font-size: 1.2rem;
-  margin-bottom: 0.3rem;
-}
-
-.detail__cta p {
-  font-size: 0.88rem;
-  color: var(--ink-soft);
-}
-
-.detail__related {
-  margin-top: var(--section-y);
-  border-top: 1px solid var(--line);
-  padding-top: var(--section-y);
-}
-
-.detail__related h2 {
-  margin-bottom: 2rem;
-}
-
-.detail__related-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1.5rem;
-}
-
-@media (max-width: 960px) {
-  .detail__layout {
-    grid-template-columns: 1fr;
-  }
-
-  .detail__aside {
-    position: static;
-    order: -1;
-  }
-
-  .detail__related-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 620px) {
-  .detail__gallery-grid,
-  .detail__related-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .detail__cta .btn {
-    width: 100%;
-  }
-}
-</style>
+<style scoped src="./css/ProjectDetailView.css"></style>

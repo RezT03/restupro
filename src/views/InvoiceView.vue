@@ -16,7 +16,7 @@ const input = ref(null)
 onMounted(() => loadSettings())
 
 function openInvoice(path) {
-  window.open(`https://invoice.restuproduction.com${path}`, '_blank', 'noopener,noreferrer')
+  window.open(`https://e-invoice.restuproduction.com${path}`, '_blank', 'noopener,noreferrer')
 }
 
 function checkInvoice() {
@@ -87,113 +87,4 @@ function checkInvoice() {
   </div>
 </template>
 
-<style scoped>
-.invoice__hero {
-  padding-block: clamp(3.5rem, 8vw, 7rem) clamp(2.5rem, 5vw, 4rem);
-  background: var(--surface);
-  border-bottom: 1px solid var(--line);
-}
-
-.invoice__hero h1 {
-  margin-block: 1.2rem 1.5rem;
-}
-
-.invoice__hero h1 em {
-  font-style: normal;
-  color: var(--brand);
-}
-
-.invoice__body {
-  padding-block: clamp(2.5rem, 5vw, 4rem) 1rem;
-}
-
-.invoice__cards {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1.5rem;
-}
-
-.invoice__card {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  padding: clamp(1.5rem, 3vw, 2.5rem);
-}
-
-.invoice__card h2 {
-  font-size: 1.5rem;
-  margin-block: 1.2rem 0.7rem;
-}
-
-.invoice__card p {
-  color: var(--ink-soft);
-  font-size: 0.9rem;
-  max-width: 42ch;
-  margin-bottom: 1.8rem;
-}
-
-.invoice__num {
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: var(--accent);
-}
-
-.invoice__check {
-  margin-top: 2rem;
-  padding: clamp(1.5rem, 3vw, 2.5rem);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-}
-
-.invoice__check h2 {
-  font-size: 1.3rem;
-  margin-bottom: 1.2rem;
-}
-
-.invoice__form {
-  display: flex;
-  gap: 0.7rem;
-  margin-bottom: 0.9rem;
-}
-
-.invoice__form input {
-  flex: 1;
-  min-width: 0;
-  height: 48px;
-  padding-inline: 1rem;
-  border: 1px solid var(--line-strong);
-  border-radius: var(--radius);
-  background: var(--surface);
-  color: var(--ink);
-  font-size: 0.9rem;
-}
-
-.invoice__form input:focus {
-  outline: 0;
-  border-color: var(--brand);
-}
-
-.invoice__check .muted {
-  font-size: 0.82rem;
-}
-
-.invoice__help {
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 1rem;
-  margin-top: 2rem;
-  font-size: 0.88rem;
-  color: var(--ink-soft);
-}
-
-@media (max-width: 680px) {
-  .invoice__cards {
-    grid-template-columns: 1fr;
-  }
-
-  .invoice__form {
-    flex-direction: column;
-  }
-}
-</style>
+<style scoped src="./css/InvoiceView.css"></style>

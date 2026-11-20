@@ -25,15 +25,33 @@ const loading = ref(true)
 const failed = ref(false)
 const query = ref('')
 const category = ref('Semua')
+const sort = ref('newest')
 
 const categories = computed(() => [
   'Semua',
   ...new Set(projects.value.map((item) => item.category).filter(Boolean)),
 ])
 
+/** Tanggal acara (bukan tanggal input) dipakai sebagai dasar urutan. */
+const sorted = computed(() => {
+  const direction = sort.value === 'oldest' ? 1 : -1
+  return [...projects.value].sort((a, b) => {
+    const dateA = String(a.eventDate || '')
+    const dateB = String(b.eventDate || '')
+    // Proyek tanpa tanggal acara selalu diletakkan di akhir, berapa pun arah urutannya.
+    if (!dateA && !dateB) return 0
+    if (!dateA) return 1
+    if (!dateB) return -1
+    const byDate = dateA.localeCompare(dateB)
+    if (byDate) return byDate * direction
+    // Tanggal sama → yang lebih baru dibuat muncul lebih dulu.
+    return String(b.createdAt || '').localeCompare(String(a.createdAt || ''))
+  })
+})
+
 const filtered = computed(() => {
   const q = query.value.trim().toLowerCase()
-  return projects.value.filter((item) => {
+  return sorted.value.filter((item) => {
     const matchCategory = category.value === 'Semua' || item.category === category.value
     const haystack = `${item.title} ${item.excerpt} ${item.location || ''} ${item.client || ''}`.toLowerCase()
     return matchCategory && (!q || haystack.includes(q))
@@ -68,14 +86,24 @@ onMounted(async () => {
 
     <section class="wrap projects__content">
       <div class="projects__tools" v-reveal>
-        <label class="search">
-          <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true">
-            <circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.7" />
-            <path d="m16 16 4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
-          </svg>
-          <span class="sr-only">Cari proyek</span>
-          <input v-model="query" type="search" placeholder="Cari nama acara atau lokasi…" />
-        </label>
+        <div class="projects__controls">
+          <label class="search">
+            <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true">
+              <circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.7" />
+              <path d="m16 16 4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+            </svg>
+            <span class="sr-only">Cari proyek</span>
+            <input v-model="query" type="search" placeholder="Cari nama acara atau lokasi…" />
+          </label>
+          <label class="sort">
+            <span class="sr-only">Urutkan berdasarkan tanggal acara</span>
+            <select v-model="sort">
+              <option value="newest">Tanggal acara: terbaru</option>
+              <option value="oldest">Tanggal acara: terlama</option>
+            </select>
+            <span class="sort__caret" aria-hidden="true">▾</span>
+          </label>
+        </div>
         <div class="chips" role="group" aria-label="Filter kategori">
           <button
             v-for="item in categories"
@@ -111,125 +139,4 @@ onMounted(async () => {
   </div>
 </template>
 
-<style scoped>
-.projects__hero {
-  padding-block: clamp(3.5rem, 8vw, 7rem) clamp(2.5rem, 5vw, 4rem);
-  border-bottom: 1px solid var(--line);
-  background: var(--surface);
-}
-
-.projects__hero h1 {
-  margin-block: 1.2rem 1.5rem;
-  max-width: 20ch;
-}
-
-.projects__hero h1 em {
-  font-style: normal;
-  color: var(--brand);
-}
-
-.projects__content {
-  padding-block: clamp(2.5rem, 5vw, 4rem) 1rem;
-}
-
-.projects__tools {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1.2rem;
-  margin-bottom: 2.5rem;
-}
-
-.search {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  border: 1px solid var(--line-strong);
-  border-radius: var(--radius);
-  background: var(--surface);
-  padding: 0 0.9rem;
-  min-width: min(320px, 100%);
-  height: 44px;
-  color: var(--ink-faint);
-}
-
-.search:focus-within {
-  border-color: var(--brand);
-}
-
-.search input {
-  border: 0;
-  outline: 0;
-  background: transparent;
-  width: 100%;
-  font-size: 0.88rem;
-  color: var(--ink);
-}
-
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.chip {
-  border: 1px solid var(--line-strong);
-  background: transparent;
-  color: var(--ink-soft);
-  border-radius: 99px;
-  padding: 0.4rem 0.9rem;
-  font-size: 0.8rem;
-  transition: all 0.2s ease;
-}
-
-.chip:hover {
-  border-color: var(--brand);
-  color: var(--brand);
-}
-
-.chip.is-active {
-  background: var(--brand);
-  border-color: var(--brand);
-  color: #fff;
-}
-
-.projects__grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1.5rem;
-}
-
-.projects__grid :deep(.card:nth-child(3n + 2)) {
-  margin-top: 1.5rem;
-}
-
-.projects__status,
-.projects__empty {
-  padding-block: 4rem;
-  text-align: center;
-  color: var(--ink-soft);
-}
-
-.projects__empty h2 {
-  font-size: 1.6rem;
-  margin-bottom: 0.7rem;
-  color: var(--ink);
-}
-
-@media (max-width: 950px) {
-  .projects__grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .projects__grid :deep(.card:nth-child(3n + 2)) {
-    margin-top: 0;
-  }
-}
-
-@media (max-width: 620px) {
-  .projects__grid {
-    grid-template-columns: 1fr;
-  }
-}
-</style>
+<style scoped src="./css/ProjectView.css"></style>

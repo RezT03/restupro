@@ -28,6 +28,25 @@ export async function initDb() {
     await bootstrap.query(
       `CREATE DATABASE IF NOT EXISTS \`${name}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`,
     )
+  } catch (error) {
+    // Shared hosting (cPanel/hPanel) umumnya melarang CREATE DATABASE walaupun
+    // database sudah dibuat lewat panel. Kalau databasenya memang sudah ada
+    // dan bisa dibuka, lanjutkan saja.
+    const canCreate = error.code !== 'ER_DB_CREATE_EXISTS' && error.code !== 'ER_ACCESS_DENIED_ERROR'
+    if (canCreate) throw error
+
+    const probe = await mysql.createConnection({ ...connectionOptions(), database: name })
+    try {
+      await probe.query('SELECT 1')
+    } catch (probeError) {
+      throw new Error(
+        `Database "${name}" tidak bisa dibuat/diakses. Buat database itu lewat panel hosting, ` +
+          `lalu pastikan DB_USER/DB_PASSWORD memiliki hak pada database tersebut. ` +
+          `(${probeError.code || probeError.message})`,
+      )
+    } finally {
+      await probe.end()
+    }
   } finally {
     await bootstrap.end()
   }
@@ -52,12 +71,27 @@ export async function initDb() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS admins (
       id TINYINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-      email VARCHAR(255) NOT NULL UNIQUE,
+      username VARCHAR(100) NOT NULL UNIQUE,
       password_hash VARCHAR(255) NOT NULL,
       created_at VARCHAR(30) NOT NULL,
       updated_at VARCHAR(30) NOT NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   `)
+
+  // Upgrade instalasi lama yang masih memakai kolom email sebagai identitas admin.
+  const [legacyColumn] = await pool.query(
+    `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'admins' AND COLUMN_NAME = 'email'`,
+    [name],
+  )
+  if (legacyColumn.length) {
+    await pool.query('ALTER TABLE admins CHANGE COLUMN email username VARCHAR(100) NOT NULL')
+    try {
+      await pool.query('ALTER TABLE admins RENAME INDEX email TO username')
+    } catch {
+      // Index sudah bernama username atau tidak ada — tidak masalah.
+    }
+  }
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS media (
@@ -98,9 +132,10 @@ export async function initDb() {
       updated_at VARCHAR(30) NOT NULL,
       INDEX idx_projects_status (status),
       INDEX idx_projects_event (event_date),
-      INDEX idx_projects_updated (updated_at),
-      CONSTRAINT fk_projects_cover FOREIGN KEY (cover_id) REFERENCES media(id) ON DELETE SET NULL
+      INDEX idx_projects_updated (updated_at)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    /* cover_id sengaja tanpa FOREIGN KEY: shared hosting sering mencabut hak
+       REFERENCES. deleteMedia() sudah membersihkan referensi secara manual. */
   `)
 }
 

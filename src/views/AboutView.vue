@@ -38,7 +38,7 @@ const wa = computed(() => whatsappLink())
       <div class="about__story-text" v-reveal>
         <p>
           Kami adalah penyedia perlengkapan event yang berbasis di Wonosobo. Kami menangani kebutuhan
-          audio, lighting, panggung, LED screen, genset, dan barikade untuk berbagai jenis acara —
+          audio, lighting, panggung, LED screen, genset, barikade, tenda, kusri, dan perlengkapan event lainnya untuk berbagai jenis acara —
           dari konser dan festival hingga seminar dan kegiatan perusahaan.
         </p>
         <p>
@@ -78,90 +78,4 @@ const wa = computed(() => whatsappLink())
   </div>
 </template>
 
-<style scoped>
-.about__hero {
-  padding-block: clamp(3.5rem, 8vw, 7rem) clamp(2.5rem, 5vw, 4rem);
-  background: var(--surface);
-  border-bottom: 1px solid var(--line);
-}
-
-.about__hero h1 {
-  margin-top: 1.2rem;
-  max-width: 22ch;
-}
-
-.about__story {
-  display: grid;
-  grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.3fr);
-  gap: 3rem;
-  padding-block: var(--section-y);
-}
-
-.about__story h2 {
-  margin-top: 1rem;
-}
-
-.about__story-text p {
-  color: var(--ink-soft);
-  line-height: 1.9;
-  max-width: 64ch;
-}
-
-.about__story-text p + p {
-  margin-top: 1.3rem;
-}
-
-.about__values {
-  background: var(--surface);
-  border-block: 1px solid var(--line);
-  padding-block: var(--section-y);
-}
-
-.about__values-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1.5rem;
-}
-
-.about__values-grid article {
-  padding: 1.8rem;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-}
-
-.about__values-grid span {
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: var(--accent);
-}
-
-.about__values-grid h3 {
-  font-size: 1.3rem;
-  margin-block: 1rem 0.6rem;
-}
-
-.about__values-grid p {
-  font-size: 0.9rem;
-  color: var(--ink-soft);
-}
-
-.about__closing {
-  padding-block: var(--section-y);
-  text-align: center;
-}
-
-.about__closing h2 {
-  margin-bottom: 1rem;
-}
-
-.about__closing .lead {
-  margin: 0 auto 2rem;
-}
-
-@media (max-width: 820px) {
-  .about__story,
-  .about__values-grid {
-    grid-template-columns: 1fr;
-  }
-}
-</style>
+<style scoped src="./css/AboutView.css"></style>

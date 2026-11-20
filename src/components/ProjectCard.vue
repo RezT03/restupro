@@ -2,22 +2,23 @@
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { formatDate, truncate } from '../utils/format'
+import BlankThumbnail from './BlankThumbnail.vue'
 
 const props = defineProps({
   project: { type: Object, required: true },
   index: { type: Number, default: 0 },
 })
 
-const fallbacks = ['/images/stage.png', '/images/lighting.png', '/images/led.png', '/images/midas.png']
-const cover = computed(
-  () => props.project.cover?.url || props.project.cover || fallbacks[props.index % fallbacks.length],
-)
+// Tanpa media sampul yang dipilih, tampilkan placeholder kosong — bukan gambar
+// acak dari folder aset.
+const cover = computed(() => props.project.cover?.url || props.project.cover || '')
 </script>
 
 <template>
   <RouterLink :to="`/project/${project.slug}`" class="card" v-reveal>
     <div class="card__media">
       <img
+        v-if="cover"
         :src="cover"
         :alt="project.cover?.alt || project.title"
         loading="lazy"
@@ -25,6 +26,7 @@ const cover = computed(
         width="800"
         height="500"
       />
+      <BlankThumbnail v-else />
       <span v-if="project.featured" class="card__flag">Unggulan</span>
     </div>
     <div class="card__body">
@@ -39,102 +41,4 @@ const cover = computed(
   </RouterLink>
 </template>
 
-<style scoped>
-.card {
-  display: block;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  background: var(--surface);
-  transition: transform 0.4s var(--ease), border-color 0.3s ease, box-shadow 0.4s ease;
-}
-
-.card:hover {
-  transform: translateY(-5px);
-  border-color: var(--brand);
-  box-shadow: 0 18px 40px rgba(20, 39, 72, 0.08);
-}
-
-.card__media {
-  position: relative;
-  aspect-ratio: 16 / 10;
-  overflow: hidden;
-  background: var(--brand-soft);
-}
-
-.card__media img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.7s var(--ease), filter 0.5s ease;
-}
-
-.card:hover .card__media img {
-  transform: scale(1.05);
-  filter: saturate(1.05);
-}
-
-.card__flag {
-  position: absolute;
-  top: 0.8rem;
-  left: 0.8rem;
-  background: var(--accent);
-  color: #fff;
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  padding: 0.3rem 0.6rem;
-  border-radius: 2px;
-}
-
-.card__body {
-  padding: 1.4rem;
-}
-
-.card__meta {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--ink-faint);
-  margin-bottom: 0.8rem;
-}
-
-.card__meta span:first-child {
-  color: var(--brand);
-  font-weight: 700;
-}
-
-.card__body h3 {
-  font-size: 1.22rem;
-  line-height: 1.3;
-  margin-bottom: 0.6rem;
-}
-
-.card__body p {
-  color: var(--ink-soft);
-  font-size: 0.88rem;
-  min-height: 3.9em;
-}
-
-.card__more {
-  display: inline-flex;
-  gap: 0.4rem;
-  align-items: center;
-  margin-top: 1.2rem;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--brand);
-}
-
-.card__more span {
-  transition: transform 0.25s var(--ease);
-}
-
-.card:hover .card__more span {
-  transform: translate(3px, -3px);
-}
-</style>
+<style scoped src="./css/ProjectCard.css"></style>

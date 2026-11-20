@@ -20,7 +20,7 @@ npm run setup:server          # install dependency Express
 cp server/.env.example server/.env
 # isi DB_USER / DB_PASSWORD
 # database `restupro` beserta tabelnya dibuat otomatis saat server pertama kali jalan
-# akun admin dibuat dari ADMIN_EMAIL + ADMIN_PASSWORD_HASH saat tabel admins masih kosong
+# akun admin dibuat dari ADMIN_USERNAME + ADMIN_PASSWORD_HASH saat tabel admins masih kosong
 
 npm run migrate --prefix server  # opsional: pindahkan data lama dari server/data/content.json
 npm run dev:full                 # Vite :5173 + Express :3510
@@ -37,17 +37,18 @@ npm run dev:api    # hanya backend
 
 ### Akun admin
 
-Akun admin disimpan di tabel MySQL `admins`, bukan lagi di `.env`. Variabel `ADMIN_EMAIL` dan
-`ADMIN_PASSWORD_HASH`/`ADMIN_PASSWORD` hanya dipakai **sekali** saat tabel masih kosong (bootstrap).
+Akun admin disimpan di tabel MySQL `admins`, bukan lagi di `.env`, dan login memakai **username**
+(bukan email). Variabel `ADMIN_USERNAME` dan `ADMIN_PASSWORD_HASH`/`ADMIN_PASSWORD` hanya dipakai
+**sekali** saat tabel masih kosong (bootstrap).
 
 ```bash
 cd server
 npm run admin -- list                          # lihat daftar admin
-npm run admin -- add admin@domain.com          # tambah admin (password ditanyakan)
+npm run admin -- add yogaa                     # tambah admin (password ditanyakan)
 npm run admin -- password                      # ganti password (auto pilih satu-satunya admin)
-npm run admin -- password admin@domain.com     # ganti password admin tertentu
-npm run admin -- email lama@domain.com baru@domain.com
-npm run admin -- remove admin@domain.com       # tidak bisa menghapus admin terakhir
+npm run admin -- password yogaa                # ganti password admin tertentu
+npm run admin -- rename yogaa yogaa2           # ganti username
+npm run admin -- remove yogaa                  # tidak bisa menghapus admin terakhir
 ```
 
 Hash scrypt juga bisa dibuat terpisah dengan `npm run hash-password`, lalu disalin ke kolom
@@ -59,11 +60,12 @@ server di-restart setelah ganti password.
 ```bash
 npm run build
 npm start                      # Express menyajikan folder dist/ + API di satu origin
+# Untuk shared hosting wajib yang punya fitur Node.js — lihat docs/DEPLOYMENT.md
 ```
 
 Pastikan `NODE_ENV=production`, `SITE_URL=https://restuproduction.com`, `TRUST_PROXY=true` bila
 di belakang reverse proxy, kredensial `DB_*` benar, dan sudah ada minimal satu baris di tabel
-`admins`. Untuk bootstrap pertama, isi `ADMIN_EMAIL` + `ADMIN_PASSWORD_HASH` di `.env`, jalankan
+`admins`. Untuk bootstrap pertama, isi `ADMIN_USERNAME` + `ADMIN_PASSWORD_HASH` di `.env`, jalankan
 server sekali, lalu hapus keduanya.
 
 ## Struktur singkat

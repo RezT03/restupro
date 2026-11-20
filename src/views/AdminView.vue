@@ -3,7 +3,7 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { adminApi, setCsrfToken, ApiError } from '@/utils/api'
 import { useSeo } from '@/utils/seo'
-import { formatBytes } from '@/utils/format'
+import { formatBytes, formatDate } from '@/utils/format'
 import { loadSettings, notifySettingsChanged } from '@/utils/settings'
 
 useSeo({ title: 'Panel Kontrol', path: '/admin', noindex: true })
@@ -14,7 +14,7 @@ const busy = ref(false)
 const error = ref('')
 const notice = ref('')
 const activeTab = ref('projects')
-const credentials = reactive({ email: '', password: '' })
+const credentials = reactive({ username: '', password: '' })
 
 const projects = ref([])
 const media = ref([])
@@ -71,7 +71,7 @@ async function login() {
   busy.value = true
   error.value = ''
   try {
-    const data = await adminApi.login(credentials.email.trim(), credentials.password)
+    const data = await adminApi.login(credentials.username.trim(), credentials.password)
     setCsrfToken(data.csrfToken)
     authenticated.value = true
     credentials.password = ''
@@ -234,8 +234,16 @@ async function saveSettings() {
   }
 }
 
-const imageMedia = computed(() => media.value.filter((item) => item.type?.startsWith('image/')))
-const fileMedia = computed(() => media.value.filter((item) => !item.type?.startsWith('image/')))
+/** Upload terbaru (berdasarkan createdAt) muncul paling atas. */
+const byNewest = (a, b) =>
+  String(b.createdAt || '').localeCompare(String(a.createdAt || '')) ||
+  String(a.name || '').localeCompare(String(b.name || ''))
+const imageMedia = computed(() =>
+  media.value.filter((item) => item.type?.startsWith('image/')).slice().sort(byNewest),
+)
+const fileMedia = computed(() =>
+  media.value.filter((item) => !item.type?.startsWith('image/')).slice().sort(byNewest),
+)
 const tabs = [
   { id: 'projects', label: 'Proyek' },
   { id: 'media', label: 'Media' },
@@ -256,8 +264,8 @@ onMounted(checkAuth)
         <h1 class="h2">Panel Kontrol</h1>
         <p class="muted">Masuk untuk mengelola proyek, media, dan informasi kontak situs.</p>
         <form @submit.prevent="login">
-          <label>Email
-            <input v-model="credentials.email" type="email" autocomplete="username" required placeholder="admin@domain.com" />
+          <label>Username
+            <input v-model="credentials.username" type="text" autocomplete="username" required placeholder="yogaa" />
           </label>
           <label>Kata sandi
             <input v-model="credentials.password" type="password" autocomplete="current-password" required placeholder="••••••••" />
@@ -437,15 +445,28 @@ onMounted(checkAuth)
               <label>Gambar sampul
                 <select v-model="form.coverId">
                   <option value="">— Tidak ada —</option>
-                  <option v-for="item in imageMedia" :key="item.id" :value="item.id">{{ item.name }}</option>
+                  <option v-for="item in imageMedia" :key="item.id" :value="item.id">
+                    {{ item.name }} · {{ formatDate(item.createdAt, { hour: '2-digit', minute: '2-digit' }) }}
+                  </option>
                 </select>
               </label>
 
               <fieldset>
                 <legend>Galeri gambar</legend>
-                <div class="drawer__checks">
-                  <label v-for="item in imageMedia" :key="item.id" class="admin__check">
-                    <input v-model="form.galleryIds" type="checkbox" :value="item.id" /> {{ item.name }}
+                <div class="drawer__media-grid">
+                  <label
+                    v-for="item in imageMedia"
+                    :key="item.id"
+                    class="media-choice"
+                    :class="{ 'is-selected': form.galleryIds.includes(item.id) }"
+                  >
+                    <input v-model="form.galleryIds" type="checkbox" :value="item.id" class="sr-only" />
+                    <img :src="item.thumbUrl || item.url" :alt="item.name" loading="lazy" decoding="async" />
+                    <span class="media-choice__name">{{ item.name }}</span>
+                    <span class="media-choice__date">
+                      {{ formatDate(item.createdAt, { hour: '2-digit', minute: '2-digit' }) }}
+                    </span>
+                    <span class="media-choice__check" aria-hidden="true">✓</span>
                   </label>
                   <p v-if="!imageMedia.length" class="muted">Unggah gambar dulu di tab Media.</p>
                 </div>
@@ -484,481 +505,4 @@ onMounted(checkAuth)
   </div>
 </template>
 
-<style scoped>
-.admin {
-  min-height: 100vh;
-}
-
-.admin__center {
-  display: grid;
-  place-items: center;
-  min-height: 70vh;
-  color: var(--ink-soft);
-}
-
-.login {
-  min-height: 100vh;
-  display: grid;
-  place-items: center;
-  padding: 2rem 1.25rem;
-  background: var(--paper);
-}
-
-.login__panel {
-  width: min(100%, 420px);
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  padding: 2.2rem;
-}
-
-.login__panel img {
-  margin-bottom: 2rem;
-}
-
-.login__panel h1 {
-  margin-block: 0.8rem 0.5rem;
-}
-
-.login__panel > .muted {
-  font-size: 0.88rem;
-  margin-bottom: 1.8rem;
-}
-
-.login__panel form {
-  display: grid;
-  gap: 1rem;
-}
-
-.login__back {
-  display: inline-block;
-  margin-top: 1.5rem;
-  font-size: 0.85rem;
-  color: var(--brand);
-}
-
-.admin__header {
-  background: var(--surface);
-  border-bottom: 1px solid var(--line);
-}
-
-.admin__header-inner {
-  min-height: 72px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.admin__header-inner > div {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.admin__badge {
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  font-weight: 700;
-  color: var(--brand);
-  border-left: 1px solid var(--line);
-  padding-left: 1rem;
-}
-
-.admin__header-actions {
-  gap: 1.2rem !important;
-}
-
-.admin__body {
-  padding-block: 2.5rem 5rem;
-}
-
-.admin__tabs {
-  display: flex;
-  gap: 1.5rem;
-  border-bottom: 1px solid var(--line);
-  margin-bottom: 2.5rem;
-}
-
-.admin__tabs button {
-  background: none;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  padding: 0.8rem 0;
-  color: var(--ink-soft);
-  font-weight: 600;
-  font-size: 0.9rem;
-}
-
-.admin__tabs button.is-active {
-  color: var(--brand);
-  border-bottom-color: var(--brand);
-}
-
-.admin__panel-head {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 1rem;
-  margin-bottom: 1.8rem;
-}
-
-.admin__panel-head h1 {
-  margin-bottom: 0.4rem;
-}
-
-.admin__panel-head p {
-  font-size: 0.88rem;
-}
-
-.admin__table-wrap {
-  overflow-x: auto;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-}
-
-.admin__table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.86rem;
-  min-width: 640px;
-}
-
-.admin__table th,
-.admin__table td {
-  text-align: left;
-  padding: 1rem;
-  border-bottom: 1px solid var(--line);
-}
-
-.admin__table th {
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--ink-faint);
-}
-
-.admin__table td small {
-  display: block;
-  color: var(--ink-faint);
-  font-size: 0.72rem;
-}
-
-.admin__row-actions {
-  white-space: nowrap;
-}
-
-.admin__row-actions button,
-.media-item__actions button {
-  background: none;
-  border: 0;
-  color: var(--brand);
-  font-size: 0.82rem;
-  font-weight: 600;
-  padding: 0.2rem 0.4rem;
-}
-
-button.is-danger {
-  color: var(--accent) !important;
-}
-
-.admin__status {
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  padding: 0.25rem 0.55rem;
-  border-radius: 3px;
-  border: 1px solid var(--line-strong);
-}
-
-.admin__status.is-published {
-  color: #1c8a54;
-  border-color: #1c8a54;
-}
-
-.admin__empty {
-  text-align: center !important;
-  color: var(--ink-faint);
-  padding: 2.5rem !important;
-}
-
-.dropzone {
-  display: grid;
-  place-items: center;
-  gap: 0.4rem;
-  border: 1.5px dashed var(--line-strong);
-  border-radius: var(--radius-lg);
-  padding: 2.5rem 1rem;
-  text-align: center;
-  cursor: pointer;
-  background: var(--surface);
-  transition: border-color 0.2s ease, background-color 0.2s ease;
-}
-
-.dropzone:hover {
-  border-color: var(--brand);
-  background: var(--brand-soft);
-}
-
-.dropzone input {
-  display: none;
-}
-
-.dropzone small {
-  color: var(--ink-faint);
-  font-size: 0.78rem;
-}
-
-.admin__media-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 1rem;
-  margin-top: 1.5rem;
-}
-
-.media-item {
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  overflow: hidden;
-  background: var(--surface);
-}
-
-.media-item__preview {
-  aspect-ratio: 4 / 3;
-  background: var(--brand-soft);
-  display: grid;
-  place-items: center;
-}
-
-.media-item__preview img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.media-item__file {
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: var(--brand);
-}
-
-.media-item__info {
-  padding: 0.8rem;
-}
-
-.media-item__info strong {
-  display: block;
-  font-size: 0.8rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.media-item__info small {
-  color: var(--ink-faint);
-  font-size: 0.68rem;
-}
-
-.media-item__actions {
-  display: flex;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-}
-
-label {
-  display: grid;
-  gap: 0.35rem;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--ink-soft);
-}
-
-input[type='text'],
-input[type='email'],
-input[type='url'],
-input[type='tel'],
-input[type='date'],
-input[type='password'],
-select,
-textarea {
-  background: var(--surface);
-  border: 1px solid var(--line-strong);
-  border-radius: var(--radius);
-  padding: 0.6rem 0.7rem;
-  font-size: 0.86rem;
-  color: var(--ink);
-  width: 100%;
-  font-weight: 400;
-}
-
-input:focus,
-select:focus,
-textarea:focus {
-  outline: 0;
-  border-color: var(--brand);
-}
-
-.admin__form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  padding: 1.5rem;
-}
-
-.admin__full {
-  grid-column: 1 / -1;
-}
-
-.admin__subhead {
-  font-size: 1rem;
-  margin: 2rem 0 0.8rem;
-}
-
-.admin__repeater {
-  display: grid;
-  grid-template-columns: 1fr 1.2fr 1.4fr auto auto;
-  gap: 0.6rem;
-  align-items: center;
-  margin-bottom: 0.6rem;
-}
-
-.admin__repeater:has(.admin__span-3),
-.admin__repeater:has(.admin__check) {
-  grid-template-columns: 1fr 2fr auto auto;
-}
-
-.admin__check {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  white-space: nowrap;
-  font-size: 0.8rem;
-}
-
-.admin__check input,
-input[type='checkbox'] {
-  width: auto;
-}
-
-.admin__error {
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
-  color: var(--accent);
-  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
-  padding: 0.7rem 0.9rem;
-  border-radius: var(--radius);
-  font-size: 0.85rem;
-  margin-block: 1rem;
-}
-
-.admin__notice {
-  background: var(--brand-soft);
-  color: var(--brand);
-  border: 1px solid color-mix(in srgb, var(--brand) 30%, transparent);
-  padding: 0.7rem 0.9rem;
-  border-radius: var(--radius);
-  font-size: 0.85rem;
-  margin-bottom: 1rem;
-}
-
-.drawer-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 250;
-  background: rgba(8, 12, 20, 0.55);
-  display: flex;
-  justify-content: flex-end;
-}
-
-.drawer {
-  width: min(100%, 580px);
-  height: 100%;
-  overflow-y: auto;
-  background: var(--paper);
-  box-shadow: -20px 0 60px rgba(0, 0, 0, 0.15);
-}
-
-.drawer__head {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1.2rem 1.5rem;
-  background: var(--surface);
-  border-bottom: 1px solid var(--line);
-}
-
-.drawer__head h2 {
-  font-size: 1.2rem;
-}
-
-.drawer__head button {
-  background: none;
-  border: 0;
-  font-size: 1.6rem;
-  color: var(--ink-soft);
-}
-
-.drawer__form {
-  display: grid;
-  gap: 1rem;
-  padding: 1.5rem;
-}
-
-.drawer__row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-}
-
-.drawer fieldset {
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 1rem;
-}
-
-.drawer legend {
-  font-size: 0.78rem;
-  font-weight: 700;
-  padding-inline: 0.4rem;
-}
-
-.drawer__checks {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.7rem 1.2rem;
-  max-height: 170px;
-  overflow-y: auto;
-}
-
-.drawer__checks .muted {
-  font-size: 0.8rem;
-}
-
-.drawer__actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.7rem;
-  padding-bottom: 2rem;
-}
-
-@media (max-width: 700px) {
-  .admin__form-grid,
-  .drawer__row {
-    grid-template-columns: 1fr;
-  }
-
-  .admin__repeater,
-  .admin__repeater:has(.admin__span-3),
-  .admin__repeater:has(.admin__check) {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-</style>
+<style scoped src="./css/AdminView.css"></style>

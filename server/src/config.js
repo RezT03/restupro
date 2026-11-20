@@ -36,7 +36,7 @@ export const config = {
   nodeEnv: process.env.NODE_ENV || 'development',
   isProduction: process.env.NODE_ENV === 'production',
   siteUrl: (process.env.SITE_URL || 'https://restuproduction.com').replace(/\/$/, ''),
-  adminEmail: (process.env.ADMIN_EMAIL || '').trim().toLowerCase(),
+  adminUsername: (process.env.ADMIN_USERNAME || '').trim().toLowerCase(),
   adminPasswordHash: process.env.ADMIN_PASSWORD_HASH || '',
   adminPassword: process.env.ADMIN_PASSWORD || '',
   sessionTtlMs: int(process.env.SESSION_TTL_HOURS, 8) * 60 * 60 * 1000,

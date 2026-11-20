@@ -76,8 +76,8 @@ export const publicApi = {
 
 export const adminApi = {
   me: () => apiFetch('/auth/me'),
-  login: (email, password) =>
-    apiFetch('/auth/login', { method: 'POST', body: { email, password } }),
+  login: (username, password) =>
+    apiFetch('/auth/login', { method: 'POST', body: { username, password } }),
   logout: () => apiFetch('/auth/logout', { method: 'POST' }),
   projects: () => apiFetch('/admin/projects'),
   media: () => apiFetch('/admin/media'),

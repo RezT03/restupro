@@ -23,7 +23,7 @@ DB_PASSWORD=password-mysql-yang-kuat
 DB_NAME=restupro
 
 # Hanya untuk bootstrap admin pertama; hapus setelah tabel admins terisi.
-ADMIN_EMAIL=admin@restuproduction.com
+ADMIN_USERNAME=yogaa
 ADMIN_PASSWORD_HASH=scrypt$...
 ```
 
@@ -31,15 +31,44 @@ Database dan tabel (`settings`, `projects`, `media`, `admins`) dibuat otomatis s
 kali berjalan. User MySQL harus punya hak `CREATE DATABASE`, `CREATE TABLE`, `SELECT`, `INSERT`,
 `UPDATE`, dan `DELETE`.
 
-Akun admin tersimpan di tabel `admins`. Saat tabel masih kosong, server memindahkan kredensial dari
-`ADMIN_EMAIL` + `ADMIN_PASSWORD_HASH` ke database, lalu variabel tersebut tidak dipakai lagi.
-Kelola akun dengan:
+Akun admin tersimpan di tabel `admins` dan login memakai **username** (bukan email). Saat tabel masih
+kosong, server memindahkan kredensial dari `ADMIN_USERNAME` + `ADMIN_PASSWORD_HASH` ke database, lalu
+variabel tersebut tidak dipakai lagi. Kelola akun dengan:
 
 ```bash
 npm run admin -- list
-npm run admin -- add admin@domain.com
-npm run admin -- password admin@domain.com
+npm run admin -- add yogaa
+npm run admin -- password yogaa
+npm run admin -- rename yogaa yogaa2
 ```
+
+## Shared hosting (cPanel / hPanel)
+
+Shared hosting **hanya bisa dipakai kalau ada fitur Node.js** (mis. *Setup Node.js App* di cPanel
+atau *Node.js* di hPanel). Kalau host hanya menyediakan PHP/static, aplikasi Express ini tidak bisa
+berjalan — `dist/` saja tidak cukup karena API, admin, dan media butuh Node + MySQL.
+
+Langkah umum:
+
+1. Buat database MySQL lewat panel dengan nama `restupro`, lalu buat user dan beri hak pada database
+   itu (`CREATE`, `SELECT`, `INSERT`, `UPDATE`, `DELETE`). Hak `CREATE DATABASE` dan `REFERENCES`
+   **tidak diperlukan**; aplikasi sudah menangani keduanya.
+2. Upload `dist/`, `server/`, dan `package.json` root. Jangan upload `node_modules/` atau `server/.env`.
+3. Di panel Node.js: app root = folder project, startup file = `server/src/server.js`, versi Node 20+.
+   Panel biasanya menyuntik variabel `PORT`; nilai ini menang atas `server/.env`.
+4. Isi environment variables lewat panel: `NODE_ENV=production`, `SITE_URL=https://domain.com`,
+   `TRUST_PROXY=true`, `DB_*`, dan `ADMIN_USERNAME` + `ADMIN_PASSWORD_HASH` untuk bootstrap pertama.
+5. Jalankan *Run NPM Install* (atau `npm install --prefix server --omit=dev` lewat terminal panel),
+   lalu restart app dan cek `/api/health`.
+
+Catatan khusus shared hosting:
+
+- Wajib HTTPS: saat `NODE_ENV=production`, cookie admin memakai atribut `Secure`.
+- Panel bisa me-restart proses kapan saja. Sesi admin disimpan di memory, jadi admin mungkin perlu
+  login ulang setelah restart. Pakai satu instance saja (session belum bersama antar instance).
+- `max_allowed_packet` MySQL di shared hosting sering kecil. Kalau upload video gagal, turunkan
+  `MAX_VIDEO_MB` atau minta host menaikkannya.
+- Pastikan ukuran/memori plan cukup untuk `sharp` saat mengompres gambar.
 
 ## Migrasi dari penyimpanan JSON lama
 
