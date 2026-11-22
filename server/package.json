@@ -2,13 +2,13 @@
   "name": "restupro-server",
   "version": "1.0.0",
   "private": true,
-  "type": "module",
+  "type": "commonjs",
   "engines": {
     "node": ">=20.19.0"
   },
   "scripts": {
-    "dev": "node --watch src/server.js",
-    "start": "node src/server.js",
+    "dev": "node --watch app.js",
+    "start": "node app.js",
     "hash-password": "node scripts/hash-password.js",
     "admin": "node scripts/admin.js",
     "migrate": "node scripts/migrate-json.js"

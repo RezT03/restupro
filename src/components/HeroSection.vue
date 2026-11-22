@@ -7,12 +7,12 @@ const wa = computed(() =>
   whatsappLink(undefined, 'Hai Restu Production, saya ingin konsultasi perlengkapan untuk acara saya.'),
 )
 
-const marquee = ['Audio System', 'Lighting', 'Panggung & Truss', 'LED Screen', 'Genset', 'Barikade']
+const marquee = ['Audio System', 'Lighting', 'Panggung & Rigging', 'LED Screen', 'Genset', 'Barikade', 'Tenda', 'Kursi']
 
 const facts = [
-  { value: '6', label: 'kategori perlengkapan' },
+  { value: '6+', label: 'kategori perlengkapan' },
   { value: '1', label: 'tempat, semua kebutuhan' },
-  { value: '✓', label: 'tim setup di lokasi' },
+  { icon: 'fa-solid fa-users-gear', label: 'tim setup di lokasi' },
 ]
 </script>
 
@@ -26,7 +26,7 @@ const facts = [
         </h1>
         <p class="lead hero__lead">
           Dari tata suara sampai panggung, Restu Production menyiapkan perlengkapan event yang
-          sesuai kebutuhan — lengkap, terawat, dan siap pakai saat Anda membutuhkannya.
+          sesuai kebutuhan. Lengkap, terawat, dan siap pakai saat Anda membutuhkannya.
         </p>
         <div class="hero__actions">
           <a :href="wa" target="_blank" rel="noopener noreferrer" class="btn btn--primary">
@@ -36,7 +36,10 @@ const facts = [
         </div>
         <dl class="hero__facts">
           <div v-for="fact in facts" :key="fact.label">
-            <dt>{{ fact.value }}</dt>
+            <dt>
+              <i v-if="fact.icon" :class="fact.icon" aria-hidden="true"></i>
+              <template v-else>{{ fact.value }}</template>
+            </dt>
             <dd>{{ fact.label }}</dd>
           </div>
         </dl>
@@ -67,7 +70,7 @@ const facts = [
     <div class="marquee" aria-hidden="true">
       <div class="marquee__track">
         <span v-for="(item, i) in [...marquee, ...marquee]" :key="`${item}-${i}`">
-          {{ item }} <b>◆</b>
+          {{ item }} <b>●</b>
         </span>
       </div>
     </div>

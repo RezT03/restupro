@@ -3,7 +3,8 @@ import path from 'node:path'
 import express from 'express'
 import compression from 'compression'
 import { config, PROJECT_ROOT } from './config.js'
-import { getMediaFile } from './store.js'
+import { initAdminAuth } from './admin-auth.js'
+import { getMediaFile, initStore } from './store.js'
 import { HttpError, asyncRoute, notFound } from './http.js'
 import { createRateLimiter, originGuard, securityHeaders } from './security.js'
 import { normalizeUploadError } from './upload.js'
@@ -14,6 +15,21 @@ import adminRoutes from './routes/admin.js'
 const app = express()
 app.disable('x-powered-by')
 if (config.trustProxy) app.set('trust proxy', 1)
+
+/* LiteSpeed mem-require startup file, jadi modul ESM ini tidak boleh punya
+   top-level await. Inisialisasi DB dijalankan sebagai promise dan request
+   ditunda sampai selesai. */
+const ready = initStore()
+  .then(() => initAdminAuth())
+  .catch((error) => {
+    console.error('[server] Inisialisasi gagal:', error)
+    throw error
+  })
+ready.catch(() => {})
+
+app.use((req, res, next) => {
+  ready.then(() => next(), next)
+})
 
 const parseJson = express.json({ limit: '1mb', strict: true })
 
@@ -51,9 +67,47 @@ app.get(
 app.use('/media', (req, res, next) => next(notFound('Media tidak ditemukan.')))
 
 const distDir = path.join(PROJECT_ROOT, 'dist')
-if (fs.existsSync(distDir)) {
-  app.use(express.static(distDir, { index: false, maxAge: '1h' }))
-  app.get('*', (req, res) => res.sendFile(path.join(distDir, 'index.html')))
+const configuredDir = config.staticDir ? path.resolve(PROJECT_ROOT, config.staticDir) : null
+const distIndex = path.join(distDir, 'index.html')
+
+/* Pilih folder yang benar-benar punya index.html. Folder dist/ kosong tidak boleh
+   mengalahkan index.html yang sudah dibongkar ke public_html/. */
+const staticDir =
+  configuredDir && fs.existsSync(path.join(configuredDir, 'index.html'))
+    ? configuredDir
+    : fs.existsSync(distIndex)
+      ? distDir
+      : PROJECT_ROOT
+const indexFile = path.join(staticDir, 'index.html')
+
+if (fs.existsSync(indexFile)) {
+  /* Saat isi dist/ dibongkar langsung ke public_html/, static root = induk server/.
+     Tutup akses ke source, env, dan dump database. */
+  if (staticDir === PROJECT_ROOT) {
+    const blockedDirs = new Set(['server', 'node_modules', 'nodevenv', '.git', 'src', 'scripts', 'docs', 'e2e'])
+    app.use((req, res, next) => {
+      let relative
+      try {
+        relative = decodeURIComponent(req.path).replace(/^\/+/, '')
+      } catch {
+        return res.status(400).end()
+      }
+      if (!relative) return next()
+      const first = relative.split('/')[0].toLowerCase()
+      if (
+        blockedDirs.has(first) ||
+        relative.startsWith('.env') ||
+        /\.(sql|log|env)$/i.test(relative) ||
+        ['package.json', 'package-lock.json'].includes(relative.toLowerCase())
+      ) {
+        return res.status(404).end()
+      }
+      next()
+    })
+  }
+
+  app.use(express.static(staticDir, { index: false, maxAge: '1h' }))
+  app.get('*', (req, res) => res.sendFile(indexFile))
 } else {
   app.get('/', (req, res) => {
     res.json({

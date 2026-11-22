@@ -43,3 +43,8 @@ __screenshots__/
 
 test-results/
 playwright-report/
+
+# Deployment artifacts & secrets
+*.zip
+restupro.sql
+id_rsa*

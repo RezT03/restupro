@@ -108,6 +108,10 @@
   transition: border-color 0.2s ease, color 0.2s ease, background-color 0.2s ease;
 }
 
+.icon-btn i {
+  font-size: 18px;
+}
+
 .icon-btn:hover {
   color: var(--brand);
   border-color: var(--brand);

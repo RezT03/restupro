@@ -38,7 +38,7 @@ const wa = computed(() => whatsappLink())
       <div class="about__story-text" v-reveal>
         <p>
           Kami adalah penyedia perlengkapan event yang berbasis di Wonosobo. Kami menangani kebutuhan
-          audio, lighting, panggung, LED screen, genset, barikade, tenda, kusri, dan perlengkapan event lainnya untuk berbagai jenis acara —
+          audio, lighting, panggung, LED screen, genset, barikade, tenda, kusri, dan perlengkapan event lainnya untuk berbagai jenis acara,
           dari konser dan festival hingga seminar dan kegiatan perusahaan.
         </p>
         <p>

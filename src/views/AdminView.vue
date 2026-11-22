@@ -260,12 +260,12 @@ onMounted(checkAuth)
     <div v-else-if="!authenticated" class="login">
       <div class="login__panel">
         <img src="/images/RESPRO LOGO-exc.svg" alt="Restu Production" width="130" height="44" />
-        <p class="eyebrow">Area terbatas</p>
+        <p class="eyebrow">Restricted Area</p>
         <h1 class="h2">Panel Kontrol</h1>
         <p class="muted">Masuk untuk mengelola proyek, media, dan informasi kontak situs.</p>
         <form @submit.prevent="login">
           <label>Username
-            <input v-model="credentials.username" type="text" autocomplete="username" required placeholder="yogaa" />
+            <input v-model="credentials.username" type="text" autocomplete="username" required placeholder="username" />
           </label>
           <label>Kata sandi
             <input v-model="credentials.password" type="password" autocomplete="current-password" required placeholder="••••••••" />

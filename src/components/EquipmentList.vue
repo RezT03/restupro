@@ -14,7 +14,7 @@ const equipment = [
     name: 'Lighting',
     image: '/images/lighting.png',
     alt: 'Rangkaian lampu panggung LED',
-    description: 'Atur mood ruangan dengan pencahayaan yang pas — dari spotlight hingga efek warna.',
+    description: 'Atur mood ruangan dengan pencahayaan yang pas, dari spotlight hingga efek warna.',
     tags: ['LED', 'Spotlight', 'Kontrol'],
   },
   {

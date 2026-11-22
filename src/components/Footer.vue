@@ -39,11 +39,7 @@ const tiktokUrl = computed(() => socialUrl('tiktok', 'tiktok.com'))
               rel="noopener noreferrer"
               aria-label="Instagram Restu Production"
             >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <rect x="2.5" y="2.5" width="19" height="19" rx="5.5" />
-                <circle cx="12" cy="12" r="4.2" />
-                <circle cx="17.6" cy="6.4" r="1.1" fill="currentColor" stroke="none" />
-              </svg>
+              <i class="fa-brands fa-instagram" aria-hidden="true"></i>
             </a>
             <a
               class="footer__social footer__social--tiktok"
@@ -52,9 +48,7 @@ const tiktokUrl = computed(() => socialUrl('tiktok', 'tiktok.com'))
               rel="noopener noreferrer"
               aria-label="TikTok Restu Production"
             >
-              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M16.6 5.8A4.6 4.6 0 0 1 15.4 2h-3v13.1a2.6 2.6 0 1 1-2.6-2.6c.3 0 .6 0 .8.1V9.2a5.6 5.6 0 1 0 4.8 5.5V8.1a7.5 7.5 0 0 0 4.3 1.4V6.4a4.6 4.6 0 0 1-3.3-.6Z" />
-              </svg>
+              <i class="fa-brands fa-tiktok" aria-hidden="true"></i>
             </a>
           </div>
         </div>

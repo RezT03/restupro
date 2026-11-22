@@ -46,6 +46,8 @@ export const config = {
   dbUser: process.env.DB_USER || 'root',
   dbPassword: process.env.DB_PASSWORD || '',
   dbName: process.env.DB_NAME || 'restupro',
+  // Kosong = pakai folder dist/ kalau ada, kalau tidak induk folder server/ (dist dibongkar).
+  staticDir: (process.env.STATIC_DIR || '').trim(),
   maxUploads: int(process.env.MAX_UPLOADS, 8),
   maxImageBytes: int(process.env.MAX_IMAGE_MB, 15) * 1024 * 1024,
   maxVideoBytes: int(process.env.MAX_VIDEO_MB, 60) * 1024 * 1024,

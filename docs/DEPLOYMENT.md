@@ -53,9 +53,14 @@ Langkah umum:
 1. Buat database MySQL lewat panel dengan nama `restupro`, lalu buat user dan beri hak pada database
    itu (`CREATE`, `SELECT`, `INSERT`, `UPDATE`, `DELETE`). Hak `CREATE DATABASE` dan `REFERENCES`
    **tidak diperlukan**; aplikasi sudah menangani keduanya.
-2. Upload `dist/`, `server/`, dan `package.json` root. Jangan upload `node_modules/` atau `server/.env`.
-3. Di panel Node.js: app root = folder project, startup file = `server/src/server.js`, versi Node 20+.
+2. Upload seluruh folder `server/` dan aset frontend. Aset boleh tetap di `dist/`, atau isi `dist/`
+   dibongkar langsung ke `public_html/` — aplikasi mendeteksi keduanya. Jangan upload
+   `node_modules/` atau `server/.env`.
+3. Di panel Node.js: app root = folder **`server`** (`public_html/server`), startup file = **`app.js`**
+   (satu level dengan `server/package.json`), versi Node 20+.
    Panel biasanya menyuntik variabel `PORT`; nilai ini menang atas `server/.env`.
+   Kalau aset tidak ada di `dist/` dan tidak langsung di `public_html/`, set `STATIC_DIR` lewat form
+   environment (boleh absolut atau relatif terhadap `public_html/`).
 4. Isi environment variables lewat panel: `NODE_ENV=production`, `SITE_URL=https://domain.com`,
    `TRUST_PROXY=true`, `DB_*`, dan `ADMIN_USERNAME` + `ADMIN_PASSWORD_HASH` untuk bootstrap pertama.
 5. Jalankan *Run NPM Install* (atau `npm install --prefix server --omit=dev` lewat terminal panel),
@@ -63,6 +68,8 @@ Langkah umum:
 
 Catatan khusus shared hosting:
 
+- `server/app.js` sengaja CommonJS karena LiteSpeed/cPanel memuat startup file dengan `require()`.
+  Kode aplikasi tetap ESM di `server/src/` (folder ini punya `package.json` sendiri bertipe `module`).
 - Wajib HTTPS: saat `NODE_ENV=production`, cookie admin memakai atribut `Secure`.
 - Panel bisa me-restart proses kapan saja. Sesi admin disimpan di memory, jadi admin mungkin perlu
   login ulang setelah restart. Pakai satu instance saja (session belum bersama antar instance).

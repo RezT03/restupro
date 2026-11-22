@@ -88,10 +88,7 @@ onMounted(async () => {
       <div class="projects__tools" v-reveal>
         <div class="projects__controls">
           <label class="search">
-            <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true">
-              <circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.7" />
-              <path d="m16 16 4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
-            </svg>
+            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
             <span class="sr-only">Cari proyek</span>
             <input v-model="query" type="search" placeholder="Cari nama acara atau lokasi…" />
           </label>

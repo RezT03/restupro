@@ -45,6 +45,10 @@
   color: var(--ink-faint);
 }
 
+.search i {
+  font-size: 17px;
+}
+
 .search:focus-within {
   border-color: var(--brand);
 }
